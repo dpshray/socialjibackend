@@ -29,7 +29,7 @@ class AuthController extends Controller
         try {
             $validated = $request->validated();
             $user = User::create($validated);
-            // $user->assignRole($validated['role']);
+            $user->assignRole($validated['role']);
 
             defer(fn () => event(new Registered($user)));
 

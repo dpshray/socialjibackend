@@ -23,5 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        if (env('APP_ENV', 'production') == 'production') {
+            $this->renderable(function (\Illuminate\Database\QueryException $e) {
+                return response()->json(['error' => 'Some Connection issue with Database. Please reach out to us if it is not resolved soon.'], 500);
+            });
+        }
     })->create();

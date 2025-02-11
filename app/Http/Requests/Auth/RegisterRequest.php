@@ -28,7 +28,7 @@ class RegisterRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'string', 'min:6', 'max:255', 'confirmed'],
-            // 'role' => ['string', 'max:255', Rule::exists('user.roles', 'name')->whereNotIn('name', ['super-admin'])],
+            'role' => ['required', 'string', 'max:255', Rule::exists('roles', 'name')->whereNotIn('name', ['Admin'])],
         ];
     }
 }
