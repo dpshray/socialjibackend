@@ -17,5 +17,6 @@ class RoleAndPermissionSeeder extends Seeder
         $adminRole = Role::create(['name' => Constants::ROLE_ADMIN]);
         $brandRole = Role::create(['name' => Constants::ROLE_BRAND]);
         $influencerRole = Role::create(['name' => Constants::ROLE_INFLUENCER]);
+        
     }
 }

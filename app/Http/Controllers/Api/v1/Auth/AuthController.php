@@ -35,7 +35,7 @@ class AuthController extends Controller
 
             $token = JWTAuth::fromUser($user);
 
-            return $this->respondSuccess(['token' => $token], 'A verification link has been sent to your email address.', 201);
+            return $this->respondSuccess(['token' => $token], 'User registered successfully. A verification link has been sent to your email address.', 201);
         } catch (\Exception $e) {
             Log::error('Registration Error: '.$e->getMessage());
 

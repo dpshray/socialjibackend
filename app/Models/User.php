@@ -45,4 +45,14 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             'deleted_at' => 'datetime',
         ];
     }
+    
+    public function scopeVerifiedEmail($query)
+    {
+        return $query->whereNotNull('email_verified_at');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNotNull('status');
+    }
 }
