@@ -17,9 +17,9 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use AuthTrait, DateOnlyTrait, HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use AuthTrait, DateOnlyTrait, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
-    protected $fillable = ['first_name', 'middle_name', 'last_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id'];
+    protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,7 +45,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             'deleted_at' => 'datetime',
         ];
     }
-    
+
     public function scopeVerifiedEmail($query)
     {
         return $query->whereNotNull('email_verified_at');

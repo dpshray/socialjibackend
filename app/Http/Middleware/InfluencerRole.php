@@ -7,7 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class BrandRole
+class InfluencerRole
 {
     /**
      * Handle an incoming request.
@@ -16,7 +16,7 @@ class BrandRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! auth()->user() || ! auth()->user()->hasRole(Constants::ROLE_BRAND)) {
+        if (! auth()->user() || ! auth()->user()->hasRole(Constants::ROLE_INFLUENCER)) {
             return response()->json(['error' => 'Forbidden'], 401);
         }
 

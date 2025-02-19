@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,9 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        if (env('APP_ENV', 'production') == 'production') {
-            $this->renderable(function (\Illuminate\Database\QueryException $e) {
-                return response()->json(['error' => 'Some Connection issue with Database. Please reach out to us if it is not resolved soon.'], 500);
-            });
-        }
+        $exceptions->render(function (Throwable $e) {
+            if (env('APP_ENV', 'production') == 'production') {
+                if ($e instanceof QueryException) {
+                    return response()->json(['error' => 'Some Connection issue with Database. Please reach out to us if it is not resolved soon.'], 500);
+                }
+            }
+
+            if ($e instanceof NotFoundHttpException) {
+                return response()->json(['error' => 'Page not found'], 404);
+            }
+        });
+
     })->create();

@@ -21,7 +21,9 @@ class AuthController extends Controller
             return $this->respondForbidden('Invalid Credentials');
         }
 
-        return $this->respondSuccess(['token' => $token]);
+        $role = auth()->user()->getRoleNames()->first();
+
+        return $this->respondSuccess(['token' => $token, 'role' => $role]);
     }
 
     public function register(RegisterRequest $request): JsonResponse
