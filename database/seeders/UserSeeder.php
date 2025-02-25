@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
         //     ],
         //     [
         //         'first_name' => 'influencer',
-        //         'email' => 'brand@gmail.com',
+        //         'email' => 'influencer@gmail.com',
         //         'password' => bcrypt('testing123'),
         //         'email_verified_at' => now(),
         //     ]

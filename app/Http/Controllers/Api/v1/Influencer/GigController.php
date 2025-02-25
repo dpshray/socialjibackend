@@ -20,7 +20,6 @@ class GigController extends Controller
             $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description'));
 
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
-                Log::info('image is captured');
                 $image = $request->file('image');
                 $path = 'influencer/gig/';
                 $gigImage = uploadFile($image, $path, disk: 'public');
@@ -57,8 +56,12 @@ class GigController extends Controller
 
     public function show(Gig $gig) 
     {
+        if (!$gig->isCreator()) {
+            return $this->respondForbidden();
+        }
+
         try {
-            $data = $gig->load('gig_pricin~g')->toArray();
+            $data = $gig->load('gig_pricing')->toArray();
 
             return $this->respondSuccess($data);
         } catch (Throwable $th) {
@@ -69,6 +72,10 @@ class GigController extends Controller
 
     public function update(StoreGigRequest $request, Gig $gig)
     {
+        if (!$gig->isCreator()) {
+            return $this->respondForbidden();
+        }
+
         try {
             $validated = $request->validated();
             $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description'));
@@ -113,6 +120,10 @@ class GigController extends Controller
 
     public function destroy(Gig $gig)
     {
+        if (!$gig->isCreator()) {
+            return $this->respondForbidden();
+        }
+
         try {
             if ($gig->image) {
                 deleteFile($gig->image, disk: 'public');
@@ -125,5 +136,12 @@ class GigController extends Controller
             Log::error("Error while deleting gig id:  $gig->id(). ERROR: " . $th->getMessage());
             return $this->respondError('Unable to delete gig.');
         }
+    }
+
+    public function search($keyword)
+    {
+        $gigs = Gig::with('gig_pricing')->active()->where('title', 'like', "%$keyword%")->get()->toArray();
+
+        return $this->respondSuccess($gigs);
     }
 }

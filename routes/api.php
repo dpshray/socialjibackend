@@ -14,10 +14,12 @@ require __DIR__.'/auth.php';
 Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function () {    
     Route::middleware([BrandRole::class])->group(function () {
         Route::get('search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');
+        Route::get('gig/search/{keyword}', [GigController::class, 'search'])->name('gig.search');
     });
 
     Route::middleware([InfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {
         Route::apiResource('gig', GigController::class);
+
 
     });
 });
