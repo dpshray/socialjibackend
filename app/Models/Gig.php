@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Constants\Constants;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Gig extends Model
 {
+    use SoftDeletes;
+
     protected $guarded = [];
 
     public function gig_pricing()
@@ -21,7 +25,7 @@ class Gig extends Model
 
     public function isCreator()
     {
-        return $this->user_id == auth()->id();
+        return $this->user_id == auth()->id() || auth()->user()->hasRole(Constants::ROLE_ADMIN);
     }
 
 }
