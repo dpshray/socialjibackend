@@ -23,9 +23,13 @@ class Gig extends Model
         return $query->where('status', 1);
     }
 
+    public function scopeCreator($query)
+    {
+        return $query->where('user_id', auth()->id());
+    }
+
     public function isCreator()
     {
         return $this->user_id == auth()->id() || auth()->user()->hasRole(Constants::ROLE_ADMIN);
     }
-
 }
