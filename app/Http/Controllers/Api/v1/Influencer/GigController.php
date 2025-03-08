@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\v1\Influencer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Influencer\StoreGigRequest;
+use App\Http\Requests\Influencer\Gig\StoreGigRequest;
 use App\Models\Gig;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +11,13 @@ use Throwable;
 
 class GigController extends Controller
 {
+    public function index()
+    {
+        $gigs = Gig::with(['gig_pricing', 'tags'])->creator()->get()->toArray();
+
+        return $this->respondSuccess($gigs);
+    }
+
     public function store(StoreGigRequest $request)
     {
         try {
@@ -45,6 +52,10 @@ class GigController extends Controller
 
             $gig->gig_pricing()->sync($pricingData[0]);
 
+            if (isset($validated['tags'])) {
+                $gig->tags()->sync($validated['tags']);
+            }
+
             return $this->respondSuccess(['gig' => $gig], 'Gig created successfully.', 201);
         } catch (Throwable $th) {
             Log::error('Error while saving gig. ERROR: '.$th->getMessage());
@@ -60,7 +71,7 @@ class GigController extends Controller
         }
 
         try {
-            $data = $gig->load('gig_pricing')->toArray();
+            $data = $gig->load(['gig_pricing', 'tags'])->toArray();
 
             return $this->respondSuccess($data);
         } catch (Throwable $th) {
@@ -111,6 +122,10 @@ class GigController extends Controller
 
             $gig->gig_pricing()->sync($pricingData[0]);
 
+            if (isset($validated['tags'])) {
+                $gig->tags()->sync($validated['tags']);
+            }
+
             return $this->respondSuccess(['gig' => $gig], 'Gig updated successfully.', 201);
         } catch (Throwable $th) {
             Log::error("Error while updating gig id:  $gig->id(). ERROR: ".$th->getMessage());
@@ -147,9 +162,13 @@ class GigController extends Controller
         return $this->respondSuccess($gigs);
     }
 
-    public function index()
+    public function searchByTag($tag)
     {
-        $gigs = Gig::with('gig_pricing')->creator()->get()->toArray();
+        $gigs = Gig::whereHas('tags', function ($query) use ($tag) {
+            $query->where('tags.name', 'like', "%$tag%");
+
+        })
+            ->paginate()->toArray();
 
         return $this->respondSuccess($gigs);
     }

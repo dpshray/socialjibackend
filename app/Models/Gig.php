@@ -18,6 +18,11 @@ class Gig extends Model
             ->withPivot('price', 'delivery_time', 'description')->withTimestamps();
     }
 
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 1);

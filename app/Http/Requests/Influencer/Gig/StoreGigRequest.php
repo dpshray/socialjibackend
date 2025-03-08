@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Influencer;
+namespace App\Http\Requests\Influencer\Gig;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -41,6 +41,8 @@ class StoreGigRequest extends FormRequest
             'delivery_time.*' => ['sometimes', 'date'],
             'tier_description' => ['nullable', 'array'],
             'tier_description.*' => ['sometimes', 'string', 'max:1000'],
+            'tags' => ['nullable', 'array', 'max:5'],
+            'tags.*' => ['sometimes', 'integer', Rule::exists('tags', 'id')],
         ];
     }
 }
