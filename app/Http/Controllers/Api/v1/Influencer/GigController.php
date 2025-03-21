@@ -13,7 +13,7 @@ class GigController extends Controller
 {
     public function index()
     {
-        $gigs = Gig::with(['gig_pricing', 'tags'])->creator()->get()->toArray();
+        $gigs = Gig::with(['gig_pricing', 'tags'])->creator()->paginate()->toArray();
 
         return $this->respondSuccess($gigs);
     }
@@ -157,7 +157,7 @@ class GigController extends Controller
 
     public function search($keyword)
     {
-        $gigs = Gig::with('gig_pricing')->active()->where('title', 'like', "%$keyword%")->get()->toArray();
+        $gigs = Gig::with('gig_pricing')->active()->where('title', 'like', "%$keyword%")->paginate()->toArray();
 
         return $this->respondSuccess($gigs);
     }
@@ -167,8 +167,7 @@ class GigController extends Controller
         $gigs = Gig::whereHas('tags', function ($query) use ($tag) {
             $query->where('tags.name', 'like', "%$tag%");
 
-        })
-            ->paginate()->toArray();
+        })->paginate()->toArray();
 
         return $this->respondSuccess($gigs);
     }
