@@ -164,7 +164,7 @@ class GigController extends Controller
 
     public function searchByTag($tag)
     {
-        $gigs = Gig::whereHas('tags', function ($query) use ($tag) {
+        $gigs = Gig::with('gig_pricing')->whereHas('tags', function ($query) use ($tag) {
             $query->where('tags.name', 'like', "%$tag%");
 
         })->paginate()->toArray();
