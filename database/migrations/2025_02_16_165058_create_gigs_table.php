@@ -41,6 +41,7 @@ return new class extends Migration
             $table->string('price')->nullable();
             $table->string('delivery_time')->nullable();
             $table->text('description')->nullable();
+            $table->text('requirement')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -43,6 +43,8 @@ class StoreGigRequest extends FormRequest
             'tier_description.*' => ['sometimes', 'string', 'max:1000'],
             'tags' => ['nullable', 'array', 'max:5'],
             'tags.*' => ['sometimes', 'integer', Rule::exists('tags', 'id')],
+            'tier_requirement' => ['nullable', 'array'],
+            'tier_requirement.*' => ['sometimes', 'string', 'max:1000'],
         ];
     }
 }

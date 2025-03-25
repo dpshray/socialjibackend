@@ -15,7 +15,7 @@ class Gig extends Model
     public function gig_pricing()
     {
         return $this->belongsToMany(PricingTier::class, 'gig_pricing', 'gig_id', 'pricing_tier_id')
-            ->withPivot('price', 'delivery_time', 'description')->withTimestamps();
+            ->withPivot('price', 'delivery_time', 'description', 'requirement')->withTimestamps();
     }
 
     public function tags()
