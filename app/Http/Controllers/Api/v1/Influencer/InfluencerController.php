@@ -14,7 +14,7 @@ class InfluencerController extends Controller
             ->verifiedEmail()
             ->where('first_name', 'like', "%$keyword%")
             ->orWhere('middle_name', 'like', "%$keyword%")
-            ->orWhere('middle_name', 'like', "%$keyword%")
+            ->orWhere('nick_name', 'like', "%$keyword%")
             ->orWhere('last_name', 'like', "%$keyword%")
             ->get()
             ->toArray();

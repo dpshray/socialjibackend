@@ -42,7 +42,7 @@ class GigController extends Controller
                 'published_at' => ! empty($validated['published']) ? Carbon::now() : null,
             ]);
 
-            $pricingData = $pricingData->transpose()->map(fn ($data) => [
+            $pricingData = $pricingData->transpose()->mapWithKeys(fn ($data) => [
                 $data[0] => [
                     'price' => $data[1],
                     'delivery_time' => $data[2],
@@ -51,7 +51,8 @@ class GigController extends Controller
                 ],
             ]);
 
-            $gig->gig_pricing()->sync($pricingData[0]);
+            $gig->gig_pricing()->sync($pricingData->toArray());
+
 
             if (isset($validated['tags'])) {
                 $gig->tags()->sync($validated['tags']);
