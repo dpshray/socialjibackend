@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Constants\Constants;
 use App\Traits\AuthTrait;
 use App\Traits\DateOnlyTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -54,5 +55,20 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function scopeActive($query)
     {
         return $query->whereNotNull('status');
+    }
+
+    public function userTrustapMetadata()
+    {
+        return $this->hasOne(UserTrustapMetadata::class);
+    }
+
+    public function isBrand()
+    {
+        return $this->hasRole(Constants::ROLE_BRAND);
+    }
+
+    public function isInfluencer()
+    {
+        return $this->hasRole(Constants::ROLE_INFLUENCER);
     }
 }

@@ -39,6 +39,7 @@ return new class extends Migration
             $table->foreignId('gig_id')->constrained('gigs');
             $table->foreignId('pricing_tier_id')->constrained('pricing_tiers');
             $table->string('price')->nullable();
+            $table->string('currency');
             $table->string('delivery_time')->nullable();
             $table->text('description')->nullable();
             $table->text('requirement')->nullable();
