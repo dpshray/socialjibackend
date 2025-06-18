@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Constants\Constants;
+use App\Notifications\Auth\EmailVerify;
 use App\Traits\AuthTrait;
 use App\Traits\DateOnlyTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -11,13 +13,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use PHPUnit\TextUI\Configuration\Constant;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Spatie\MediaLibrary\{HasMedia, InteractsWithMedia, MediaCollections\Models\Media};
 
-class User extends Authenticatable implements JWTSubject, MustVerifyEmail
+class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use AuthTrait, DateOnlyTrait, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use AuthTrait, DateOnlyTrait, HasFactory, HasRoles, Notifiable, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id'];
 
@@ -46,6 +50,11 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         ];
     }
 
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new EmailVerify);
+    }
+
     public function scopeVerifiedEmail($query)
     {
         return $query->whereNotNull('email_verified_at');
@@ -54,5 +63,19 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function scopeActive($query)
     {
         return $query->whereNotNull('status');
+    }
+
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(Constants::MEDIA_USER)
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
+            ->registerMediaConversions(function (Media $media) {
+                $this->addMediaConversion('thumbnail')
+                    ->width(100)
+                    ->height(100)
+                    ->nonQueued(); #included this since we are not queueing conversions
+            });
     }
 }

@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\Registered;
+use App\Listeners\SendEmailVerificationNotification;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,5 +39,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        Cache::remember('roles', 86400, fn() => DB::table('roles')->select('id', 'name')->get()->toArray());
     }
 }

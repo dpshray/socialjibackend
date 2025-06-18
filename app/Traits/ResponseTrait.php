@@ -4,7 +4,7 @@ namespace App\Traits;
 
 trait ResponseTrait
 {
-    public function apiSuccess(string $message = 'Request successful', array $data = [],  int $statusCode = 200)
+    public function apiSuccess(string $message = 'Request successful', array|object|null $data = null,  int $statusCode = 200)
     {
         return response()->json([
             'message' => $message,

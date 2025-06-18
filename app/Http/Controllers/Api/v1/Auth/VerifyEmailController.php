@@ -16,7 +16,6 @@ class VerifyEmailController extends Controller
     public function __invoke($id, $hash)
     {
         $user = User::findOrFail($id);
-
         if (! hash_equals((string) $user->getKey(), (string) $id)) {
             return false;
         }

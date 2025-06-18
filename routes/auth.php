@@ -19,6 +19,7 @@ Route::controller(AuthController::class)->middleware([JwtMiddleware::class, Veri
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
     Route::get('profile', 'userProfile');
+    Route::delete('delete-account', 'accountRemover');
 });
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
@@ -40,3 +41,5 @@ Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke
 Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
     ->middleware([JwtMiddleware::class, 'throttle:6,1'])
     ->name('verification.send');
+
+Route::get('get-roles', [AuthController::class, 'fetchRoles']);

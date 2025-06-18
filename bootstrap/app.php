@@ -6,6 +6,13 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Exceptions\NotOwnerException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Auth\AuthenticationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,15 +32,23 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $e) {
+        $responder = new class {
+            use \App\Traits\ResponseTrait;
+        };
+        $exceptions->render(function (Throwable $e)  use ($responder) {
             if (env('APP_ENV', 'production') == 'production') {
                 if ($e instanceof QueryException) {
                     return response()->json(['error' => 'Some Connection issue with Database. Please reach out to us if it is not resolved soon.'], 500);
                 }
             }
-
             if ($e instanceof NotFoundHttpException) {
-                return response()->json(['error' => 'Page not found'], 404);
+                return $responder->apiError($e->getMessage(), 404);
+        }
+        });
+        $exceptions->render(function (ValidationException $e, Request $request) use($responder) {
+            if ($request->expectsJson()) {
+                $errors = collect($e->errors())->mapWithKeys(fn($i,$k) => [$k => $i[0]])->all();
+                return $responder->apiError($e->getMessage(), 422, $errors);
             }
         });
 

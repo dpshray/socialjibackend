@@ -26,10 +26,15 @@ class RegisterRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'nick_name' => ['required', 'string', 'max:255', Rule::unique('users')],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
+            'nick_name' => ['required', 'string', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
-            'role' => ['required', 'string', 'max:255', Rule::exists('roles', 'name')->whereNotIn('name', ['Admin'])],
+            'role_id' => ['required', Rule::exists('roles', 'id')->whereNotIn('name', ['Admin'])],
+            'image' => ['required', 'max:1024']
         ];
+    }
+
+    public function passedValidation(){
+        $this->replace(['role_id' => (int)$this->role_id]);
     }
 }
