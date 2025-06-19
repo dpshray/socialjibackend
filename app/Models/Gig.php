@@ -15,7 +15,7 @@ class Gig extends Model
     public function gig_pricing()
     {
         return $this->belongsToMany(PricingTier::class, 'gig_pricing', 'gig_id', 'pricing_tier_id')
-            ->withPivot('price', 'delivery_time', 'description', 'requirement')->withTimestamps();
+            ->withPivot('price', 'delivery_time', 'description', 'requirement', 'currency')->withTimestamps();
     }
 
     public function tags()
@@ -36,5 +36,10 @@ class Gig extends Model
     public function isCreator()
     {
         return $this->user_id == auth()->id() || auth()->user()->hasRole(Constants::ROLE_ADMIN);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -13,4 +13,7 @@ class Constants
     public const MEDIA_USER = "user";
 
     public const PASSWORD_RESET_TOKEN_EXPIRE_MIN = 10;
+    public const TRUSTAP_FULL_USER = 'TrustapFullUser';
+
+    public const TRUSTAP_GUEST_USER = 'TrustapGuestUser';
 }

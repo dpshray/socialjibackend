@@ -22,7 +22,7 @@ class GigController extends Controller
     {
         try {
             $validated = $request->validated();
-            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement'));
+            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement', 'currency'));
 
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 $image = $request->file('image');
@@ -48,6 +48,7 @@ class GigController extends Controller
                     'delivery_time' => $data[2],
                     'description' => $data[3],
                     'requirement' => $data[4],
+                    'currency' => $data[5],
                 ],
             ]);
 
@@ -91,7 +92,7 @@ class GigController extends Controller
 
         try {
             $validated = $request->validated();
-            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement'));
+            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement', 'currency'));
 
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 if ($gig->image) {
@@ -120,6 +121,7 @@ class GigController extends Controller
                     'delivery_time' => $data[2],
                     'description' => $data[3],
                     'requirement' => $data[4],
+                    'currency' => $data[5],
                 ],
             ]);
 

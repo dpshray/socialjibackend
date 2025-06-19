@@ -65,17 +65,18 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         return $query->whereNotNull('status');
     }
 
-
-    public function registerMediaCollections(): void
+    public function userTrustapMetadata()
     {
-        $this->addMediaCollection(Constants::MEDIA_USER)
-            ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
-            ->registerMediaConversions(function (Media $media) {
-                $this->addMediaConversion('thumbnail')
-                    ->width(100)
-                    ->height(100)
-                    ->nonQueued(); #included this since we are not queueing conversions
-            });
+        return $this->hasOne(UserTrustapMetadata::class);
+    }
+
+    public function isBrand()
+    {
+        return $this->hasRole(Constants::ROLE_BRAND);
+    }
+
+    public function isInfluencer()
+    {
+        return $this->hasRole(Constants::ROLE_INFLUENCER);
     }
 }

@@ -35,4 +35,25 @@ return [
         ],
     ],
 
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_TOKEN'),
+        'redirect' => env('FACEBOOK_REDIRECT_URL'),
+    ],
+
+    'trustap' => [
+        'url' => env('TRUSTAP_URL'),
+        'client_id' => env('TRUSTAP_CLIENT_ID'),
+        'client_secret' => env('TRUSTAP_CLIENT_SECRET'),
+        'api_key' => env('TRUSTAP_API_KEY'),
+        'payment_action' => env('TRUSTAP_BUYER_PAYMENT_ACTION'),
+        'payment_callback_uri' => env('TRUSTAP_PAYMENT_CALLBACK_URI'),
+        'sso_url' => env('TRUSTAP_SSO_URL'),
+        'auth_redirect_url' => env('TRUSTAP_AUTH_REDIRECT_URI'),
+    ],
+
+    'frontend' => [
+        'url' => env('APP_FRONTEND_URL', 'https://frontend.stage.dworklabs.com/'),
+    ],
+
 ];

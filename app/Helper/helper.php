@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Logging;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 if (! function_exists('uploadFile')) {
@@ -43,5 +45,43 @@ if (! function_exists('deleteFile')) {
         }
 
         return false;
+    }
+}
+
+if (! function_exists('logError')) {
+    function logError($methodName, $requestPayload, $responsePayload, $message = 'An error occurred')
+    {
+        Log::error($methodName, [
+            'request_payload' => $requestPayload,
+            'response_payload' => $responsePayload,
+        ]);
+
+        Logging::create([
+            'user_id' => auth()->check() ? auth()->id() : null,
+            'level' => 'error',
+            'message' => $message,
+            'request_payload' => json_encode($requestPayload),
+            'response_payload' => json_encode($responsePayload),
+            'ip_address' => request()->ip(),
+        ]);
+    }
+}
+
+if (! function_exists('logInfo')) {
+    function logInfo($methodName, $requestPayload, $responsePayload, $message = 'Information logged')
+    {
+        Log::info($methodName, [
+            'request_payload' => $requestPayload,
+            'response_payload' => $responsePayload,
+        ]);
+
+        Logging::create([
+            'user_id' => auth()->check() ? auth()->id() : null,
+            'level' => 'info',
+            'message' => $message,
+            'request_payload' => json_encode($requestPayload),
+            'response_payload' => json_encode($responsePayload),
+            'ip_address' => request()->ip(),
+        ]);
     }
 }
