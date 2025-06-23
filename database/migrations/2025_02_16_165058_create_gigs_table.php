@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('title');
             $table->string('category')->nullable();
             $table->text('description')->nullable();
-            $table->json('requirements')->nullable();
-            $table->json('features')->nullable();
+            $table->text('requirements')->nullable();
+            $table->text('features')->nullable();
             $table->string('image')->nullable();
             $table->boolean('status')->default(1);   // archived, active
             $table->timestamp('published_at')->nullable();
