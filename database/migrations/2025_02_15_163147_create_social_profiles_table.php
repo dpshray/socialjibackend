@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('social_profiles', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('social_site_id')->constrained('social_sites');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('user_id')->constrained('users');
+            $table->integer('social_site_id');
+            $table->foreign('social_site_id')->references('id')->on('social_sites')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('social_site_id')->constrained('social_sites');
             $table->string('profile_url')->nullable();
             $table->integer('follower_count')->nullable();
             $table->integer('following_count')->nullable();

@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_trustap_metadata', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('user_id')->constrained('users');
             $table->string('trustapGuestUserId')->nullable();
             $table->string('trustapFullUserId')->nullable();
             $table->string('trustapFullUserEmail')->nullable();

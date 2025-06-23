@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('social_sites', function (Blueprint $table) {
-            $table->id();
+            $table->integer('id')->autoIncrement()->primary();            
             $table->string('name');
             $table->string('label')->nullable();
             $table->timestamps();

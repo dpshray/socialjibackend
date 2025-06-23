@@ -14,28 +14,28 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // $users = [
-        //     [
-        //         'first_name' => 'admin',
-        //         'email' => 'admin@gmail.com',
-        //         'password' => bcrypt('testing123'),
-        //         'email_verified_at' => now(),
-        //     ],
-        //     [
-        //         'first_name' => 'brand',
-        //         'email' => 'brand@gmail.com',
-        //         'password' => bcrypt('testing123'),
-        //         'email_verified_at' => now(),
-        //     ],
-        //     [
-        //         'first_name' => 'influencer',
-        //         'email' => 'influencer@gmail.com',
-        //         'password' => bcrypt('testing123'),
-        //         'email_verified_at' => now(),
-        //     ]
-        // ];
+        $users = [
+            [
+                'first_name' => 'admin',
+                'email' => 'admin@gmail.com',
+                'password' => bcrypt('testing123'),
+                'email_verified_at' => now(),
+            ],
+            [
+                'first_name' => 'brand',
+                'email' => 'brand@gmail.com',
+                'password' => bcrypt('testing123'),
+                'email_verified_at' => now(),
+            ],
+            [
+                'first_name' => 'influencer',
+                'email' => 'influencer@gmail.com',
+                'password' => bcrypt('testing123'),
+                'email_verified_at' => now(),
+            ]
+        ];
 
-        // DB::table('users')->insert($users);
+        DB::table('users')->insert($users);
 
         $admin = User::where(['first_name' => 'Admin'])->first();
         $admin->assignRole(Constants::ROLE_ADMIN);

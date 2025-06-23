@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gigs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('user_id')->constrained('users');
             $table->string('title');
             $table->string('category')->nullable();
             $table->text('description')->nullable();
@@ -27,7 +29,7 @@ return new class extends Migration
         });
 
         Schema::create('pricing_tiers', function (Blueprint $table) {
-            $table->id();
+            $table->integer('id')->autoIncrement()->primary();
             $table->string('name');
             $table->string('label')->nullable();
             $table->timestamps();
@@ -35,12 +37,17 @@ return new class extends Migration
         });
 
         Schema::create('gig_pricing', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('gig_id')->constrained('gigs');
-            $table->foreignId('pricing_tier_id')->constrained('pricing_tiers');
-            $table->string('price')->nullable();
-            $table->string('currency');
-            $table->string('delivery_time')->nullable();
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('gig_id');
+            $table->foreign('gig_id')->references('id')->on('gigs')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('gig_id')->constrained('gigs');
+            $table->integer('pricing_tier_id');
+            $table->foreign('pricing_tier_id')->references('id')->on('pricing_tiers')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('pricing_tier_id')->constrained('pricing_tiers');
+            $table->decimal('price',10,2);
+            $table->integer('currency_id');
+            $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('cascade')->onUpdate('cascade');
+            $table->dateTime('delivery_time')->nullable();
             $table->text('description')->nullable();
             $table->text('requirement')->nullable();
             $table->timestamps();

@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('entity_trustap_metadata', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('gig_id')->constrained('gigs');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('gig_id');
+            $table->foreign('gig_id')->references('id')->on('gigs')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('gig_id')->constrained('gigs');
             $table->boolean('trustapEnabled')->default(false);
             $table->string('transactionType');
 

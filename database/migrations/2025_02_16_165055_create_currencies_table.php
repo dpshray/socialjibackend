@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('currencies', function (Blueprint $table) {
-            $table->id();
+            $table->integer('id')->autoIncrement()->primary();
             $table->string('name');
             $table->string('code');
             $table->string('symbol');

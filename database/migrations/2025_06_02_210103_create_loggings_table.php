@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('loggings', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('user_id')->nullable()->constrained('users');
             $table->string('level', 50);
             $table->text('message');
             $table->json('request_payload')->nullable();

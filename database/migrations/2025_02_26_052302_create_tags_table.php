@@ -12,17 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tags', function (Blueprint $table) {
-            $table->id();
+            $table->integer('id')->autoIncrement()->primary();
             $table->string('name')->unique();
-            $table->foreignId('user_id')->constrained('users');
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('user_id')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
         });
 
         Schema::create('gig_tag', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('gig_id')->constrained('gigs');
-            $table->foreignId('tag_id')->constrained('tags');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('gig_id');
+            $table->foreign('gig_id')->references('id')->on('gigs')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('gig_id')->constrained('gigs');
+            $table->integer('tag_id');
+            $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('tag_id')->constrained('tags');
             $table->timestamps();
             $table->softDeletes();
         });

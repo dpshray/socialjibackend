@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('entity_trustap_transactions', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('gig_id')->constrained('gigs');
-            $table->foreignId('gig_pricing_id')->constrained('gig_pricing');
+            $table->integer('id')->autoIncrement()->primary();
+            $table->integer('gig_id');
+            $table->foreign('gig_id')->references('id')->on('gigs')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('gig_id')->constrained('gigs');
+            $table->integer('gig_pricing_id');
+            $table->foreign('gig_pricing_id')->references('id')->on('gig_pricing')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('gig_pricing_id')->constrained('gig_pricing');
             $table->string('gig_title');
             $table->text('descripion')->nullable();
 
