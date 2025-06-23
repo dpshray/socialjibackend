@@ -8,7 +8,25 @@ abstract class Controller
 {
     use ResponseTrait;
 
-    /* public function respondCreated(string $message = 'Resource created successfully', int $statusCode = 201)
+/*     public function respondSuccess(array $data = [], string $message = 'Request successful', int $statusCode = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $statusCode);
+    }
+
+    public function respondError(string $message = 'An error occurred', int $statusCode = 400, $errors = null)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => $errors,
+        ], $statusCode);
+    }
+
+    public function respondCreated(string $message = 'Resource created successfully', int $statusCode = 201)
     {
         return response()->json([
             'success' => true,
