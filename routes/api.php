@@ -28,10 +28,10 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
 
     Route::middleware([InfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {
         Route::apiResource('gig', GigController::class);
-        Route::apiResource('tag', TagController::class)->except(['update', 'delete']);
+        Route::get('tag/search', [TagController::class, 'search'])->name('tag.search');
+        Route::apiResource('tag', TagController::class)->except(['show']);
 
         
-        Route::get('tag/search/{keyword}', [TagController::class, 'search'])->name('tag.search');
         
     });
     Route::middleware([AdminRole::class])->prefix('admin')->group(function(){

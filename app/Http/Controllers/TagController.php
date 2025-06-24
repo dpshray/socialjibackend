@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Requests\Influencer\Tag\StoreTagRequest;
 use App\Http\Resources\Tag\TagCollection;
 use App\Models\Tag;
@@ -38,9 +39,22 @@ class TagController extends Controller
 
     }
 
+    public function update(Request $request, Tag $tag){
+        $this->isTagOwner($tag);
+        $tag->update($request->only('name'));
+        return $this->apiSuccess('Tag updated');
+    }
+
     public function show(Tag $tag)
     {
-        return $this->respondSuccess($tag->toArray());
+        $this->isTagOwner($tag);
+        return $this->apiSuccess('Tag show', $tag->toArray());
+    }
+    
+    public function destroy(Tag $tag){
+        $this->isTagOwner($tag);
+        $tag->delete();
+        return $this->apiSuccess('Tag deleted');
     }
 
     public function search(Request $request)
@@ -49,5 +63,12 @@ class TagController extends Controller
         $tags = Tag::creator()->where('name', 'like', "%$keyword%")->paginate();
         $tags = $this->setupPagination($tags, TagCollection::class)->data;
         return $this->apiSuccess('search result for tag name '.$keyword, $tags);
+    }
+
+    private function isTagOwner(Tag $tag)
+    {
+        if (Auth::id() != $tag->user_id) {
+            throw new ForbiddenItemAccessException();
+        }
     }
 }
