@@ -38,12 +38,11 @@ class PricingResource extends JsonResource
         return [
             "id" => $this->id,
             "label" => $this->label,
-            "gig_id" => $this->pivot->gig_id,
             "price" => $this->pivot->price,
             "delivery_time" => $this->pivot->delivery_time,
             "description" => $this->pivot->description,
             "requirement" => $this->pivot->requirement,
-
+            "currency" => cache('currencies')->firstWhere('id',$this->pivot->currency_id)
         ];
     }
 }
