@@ -10,8 +10,7 @@ class PricingTierController extends Controller
 {
     public function index()
     {
-        $pricingTiers = PricingTier::all()->toArray();
-
-        return $this->respondSuccess($pricingTiers);
+        $pricingTiers = PricingTier::select('id','name','label')->get();
+        return $this->apiSuccess('list of available pricing tiers', $pricingTiers);
     }
 }

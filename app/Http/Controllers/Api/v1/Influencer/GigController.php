@@ -2,178 +2,129 @@
 
 namespace App\Http\Controllers\Api\v1\Influencer;
 
+use App\Constants\Constants;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Influencer\Gig\StoreGigRequest;
+use App\Http\Resources\Gig\GigCollection;
+use App\Http\Resources\Gig\GigResource;
 use App\Models\Gig;
+use App\Services\GigService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Traits\PaginationTrait;
 
 class GigController extends Controller
 {
+    use PaginationTrait;
+
+    private $user = null;
+    public function __construct()
+    {
+        $this->user = Auth::user();
+    }
+
     public function index()
     {
-        $gigs = Gig::with(['gig_pricing', 'tags'])->creator()->paginate()->toArray();
-
-        return $this->respondSuccess($gigs);
+        $gigs = Gig::select('id','title')
+                    ->creator()
+                    ->paginate();
+        $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
+        return $this->apiSuccess('list of available gigs of user : '.$this->user->nick_name, $gigs);
     }
 
     public function store(StoreGigRequest $request)
     {
         try {
-            $validated = $request->validated();
-            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement', 'currency'));
+            DB::transaction(function () use($request){
+                $validated = $request->validated();
+                app(GigService::class)->setFormData($validated)->store()->upsertPricingAndTag();
+            });
+            return $this->apiSuccess('Gig created successfully.');
 
-            if ($request->hasFile('image') && $request->file('image')->isValid()) {
-                $image = $request->file('image');
-                $path = 'influencer/gig/';
-                $gigImage = uploadFile($image, $path, disk: 'public');
-            }
-
-            $gig = Gig::create([
-                'user_id' => auth()->id(),
-                'title' => $validated['title'],
-                'category' => $validated['category'],
-                'description' => $validated['description'],
-                'requirements' => json_encode($validated['requirements']),
-                'features' => json_encode($validated['features']),
-                'image' => $gigImage ?? null,
-                'status' => $validated['status'],
-                'published_at' => ! empty($validated['published']) ? Carbon::now() : null,
-            ]);
-
-            $pricingData = $pricingData->transpose()->mapWithKeys(fn ($data) => [
-                $data[0] => [
-                    'price' => $data[1],
-                    'delivery_time' => $data[2],
-                    'description' => $data[3],
-                    'requirement' => $data[4],
-                    'currency' => $data[5],
-                ],
-            ]);
-
-            $gig->gig_pricing()->sync($pricingData->toArray());
-
-
-            if (isset($validated['tags'])) {
-                $gig->tags()->sync($validated['tags']);
-            }
-
-            return $this->respondSuccess(['gig' => $gig], 'Gig created successfully.', 201);
         } catch (Throwable $th) {
             Log::error('Error while saving gig. ERROR: '.$th->getMessage());
-
-            return $this->respondError('Unable to save gig.');
+            return $this->apiError($th->getMessage());
         }
     }
 
     public function show(Gig $gig)
     {
         if (! $gig->isCreator()) {
-            return $this->respondForbidden();
+            return $this->apiError('Forbidden', 403);
         }
 
         try {
-            $data = $gig->load(['gig_pricing', 'tags'])->toArray();
-
-            return $this->respondSuccess($data);
+            $data = $gig->load(['gig_pricing', 'tags']);
+            $data = new GigResource($data);
+            return $this->apiSuccess('gig detail', $data);
         } catch (Throwable $th) {
             Log::error("Error while showing gig id:  $gig->id(). ERROR: ".$th->getMessage());
-
-            return $this->respondError('Unable to show gig.');
+            return $th->getMessage();
+            return $this->apiError('Unable to show gig.');
         }
     }
 
     public function update(StoreGigRequest $request, Gig $gig)
     {
         if (! $gig->isCreator()) {
-            return $this->respondForbidden();
+            return $this->apiError('Forbidden', 403);
         }
-
         try {
             $validated = $request->validated();
-            $pricingData = collect($request->only('pricing_tier', 'price', 'delivery_time', 'tier_description', 'tier_requirement', 'currency'));
-
-            if ($request->hasFile('image') && $request->file('image')->isValid()) {
-                if ($gig->image) {
-                    deleteFile($gig->image);
-                }
-
-                $image = $request->file('image');
-                $path = 'influencer/gig/';
-                $gigImage = uploadFile($image, $path, disk: 'public');
-            }
-
-            $updated = $gig->update([
-                'title' => $validated['title'],
-                'category' => $validated['category'],
-                'description' => $validated['description'],
-                'requirements' => json_encode($validated['requirements']),
-                'features' => json_encode($validated['features']),
-                'image' => $gigImage ?? $gig->image,
-                'status' => $validated['status'],
-                'published_at' => ! empty($validated['published']) ? Carbon::now() : null,
-            ]);
-
-            $pricingData = $pricingData->transpose()->map(fn ($data) => [
-                $data[0] => [
-                    'price' => $data[1],
-                    'delivery_time' => $data[2],
-                    'description' => $data[3],
-                    'requirement' => $data[4],
-                    'currency' => $data[5],
-                ],
-            ]);
-
-            $gig->gig_pricing()->sync($pricingData[0]);
-
-            if (isset($validated['tags'])) {
-                $gig->tags()->sync($validated['tags']);
-            }
-
-            return $this->respondSuccess(['gig' => $gig], 'Gig updated successfully.', 201);
+            app(GigService::class)->setFormData($validated)->update($gig)->upsertPricingAndTag();
+            return $this->apiSuccess('Gig updated successfully.');
         } catch (Throwable $th) {
             Log::error("Error while updating gig id:  $gig->id(). ERROR: ".$th->getMessage());
-
-            return $this->respondError('Unable to update gig.');
+            return $this->apiError('Unable to update gig.');
         }
     }
 
     public function destroy(Gig $gig)
     {
         if (! $gig->isCreator()) {
-            return $this->respondForbidden();
+            return $this->apiError('Forbidden', 403);
         }
 
         try {
-            if ($gig->image) {
-                deleteFile($gig->image, disk: 'public');
-            }
+            $gig->delete();
 
-            $deleted = $gig->delete();
-
-            return $this->respondOk('Gig deleted successfully.');
+            return $this->apiSuccess('Gig deleted successfully.');
         } catch (Throwable $th) {
             Log::error("Error while deleting gig id:  $gig->id(). ERROR: ".$th->getMessage());
 
-            return $this->respondError('Unable to delete gig.');
+            return $this->apiError('Unable to delete gig.', 409);
         }
     }
 
-    public function search($keyword)
+    public function search(Request $request)
     {
-        $gigs = Gig::with('gig_pricing')->active()->where('title', 'like', "%$keyword%")->paginate()->toArray();
-
-        return $this->respondSuccess($gigs);
+        $gig_name = $request->query('name');
+        $tag_name= $request->query('tag');
+        $gigs = Gig::with('tags:name')
+                ->select('id','title')
+                ->where('title', 'like', "%$gig_name%")
+                ->when($tag_name, function($qry,$val){
+                    $qry->whereHas('tags', function($qry) use($val){
+                        return $qry->where('name','like', "%$val%");
+                    });
+                })
+                ->paginate();
+        $gigs = $gigs->items();
+        
+        return $this->apiSuccess('gig search results',$gigs);
     }
 
-    public function searchByTag($tag)
+    /* public function searchByTag($tag)
     {
-        $gigs = Gig::with('gig_pricing')->whereHas('tags', function ($query) use ($tag) {
-            $query->where('tags.name', 'like', "%$tag%");
-
-        })->paginate()->toArray();
-
-        return $this->respondSuccess($gigs);
-    }
+        $gigs = Gig::select('id','title')
+                ->whereHas('tags', function ($query) use ($tag) {
+                    $query->where('tags.name', 'like', "%$tag%");
+                })->paginate();
+        $gigs = $gigs->items();
+        return $this->apiSuccess('gig list based on tag name(s)',$gigs);
+    } */
 }

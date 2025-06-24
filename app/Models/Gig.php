@@ -5,17 +5,18 @@ namespace App\Models;
 use App\Constants\Constants;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\{HasMedia, InteractsWithMedia, MediaCollections\Models\Media};
 
-class Gig extends Model
+class Gig extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use SoftDeletes, InteractsWithMedia;
 
     protected $guarded = [];
 
     public function gig_pricing()
     {
         return $this->belongsToMany(PricingTier::class, 'gig_pricing', 'gig_id', 'pricing_tier_id')
-            ->withPivot('price', 'delivery_time', 'description', 'requirement', 'currency')->withTimestamps();
+            ->withPivot('price', 'delivery_time', 'description', 'requirement', 'currency_id')->withTimestamps();
     }
 
     public function tags()
@@ -41,5 +42,18 @@ class Gig extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(Constants::MEDIA_GIG)
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
+            ->registerMediaConversions(function (Media $media) {
+                $this->addMediaConversion('thumbnail')
+                    ->width(100)
+                    ->height(100)
+                    ->nonQueued(); #included this since we are not queueing conversions
+            });
     }
 }
