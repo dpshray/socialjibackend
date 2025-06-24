@@ -11,6 +11,7 @@ class Constants
     public const ROLE_INFLUENCER = 'Influencer';
 
     public const MEDIA_USER = "user";
+    public const MEDIA_GIG = "gig";
 
     public const PASSWORD_RESET_TOKEN_EXPIRE_MIN = 10;
     public const TRUSTAP_FULL_USER = 'TrustapFullUser';
