@@ -41,5 +41,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Cache::remember('roles', 86400, fn() => DB::table('roles')->select('id', 'name')->get()->toArray());
+        Cache::forever('currencies', DB::table('currencies')->select('id', 'name','code','symbol')->get());
     }
 }
