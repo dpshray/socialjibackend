@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ForbiddenItemAccessException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -49,6 +50,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 $errors = collect($e->errors())->mapWithKeys(fn($i,$k) => [$k => $i[0]])->all();
                 return $responder->apiError($e->getMessage(), 422, $errors);
+            }
+        });
+        $exceptions->render(function (ForbiddenItemAccessException $e, Request $request) use($responder) {
+            if ($request->expectsJson()) {
+                return $responder->apiError('Forbidden', 403);
             }
         });
 
