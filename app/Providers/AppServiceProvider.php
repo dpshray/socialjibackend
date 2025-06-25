@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,7 +41,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        Cache::remember('roles', 86400, fn() => DB::table('roles')->select('id', 'name')->get()->toArray());
-        Cache::forever('currencies', DB::table('currencies')->select('id', 'name','code','symbol')->get());
+        if (Schema::hasTable('roles')) {
+            Cache::remember('roles', 86400, fn() => DB::table('roles')->select('id', 'name')->get()->toArray());
+        }
+        if (Schema::hasTable('currencies')) {
+            Cache::remember('currencies', 86400, fn() => DB::table('currencies')->select('id', 'name', 'code', 'symbol')->get());
+        }
+
     }
 }
