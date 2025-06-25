@@ -19,10 +19,6 @@ return new class extends Migration
             $table->string('symbol');
             $table->softDeletes();
         });
-        DB::table('currencies')->insert([
-            ['name' => 'nepali rupee', 'code' => 'NPR', 'symbol' => 'रु'],
-            ['name' => 'us dollar', 'code' => 'USD', 'symbol' => '$']
-        ]);
     }
 
     /**
