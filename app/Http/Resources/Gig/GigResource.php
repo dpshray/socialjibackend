@@ -5,6 +5,7 @@ namespace App\Http\Resources\Gig;
 use App\Http\Resources\Pricing\PricingCollection;
 use App\Http\Resources\Pricing\PricingResource;
 use App\Http\Resources\Tag\TagCollection;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -44,6 +45,7 @@ class GigResource extends JsonResource
             'published_at' => $this->when($this->published_at, $this->published_at),
             'pricings' => $this->whenLoaded('gig_pricing', new PricingCollection($this->gig_pricing)),
             'tags' => $this->whenLoaded('tags', new TagCollection($this->tags)),
+            'user' => new UserResource($this->whenLoaded('user'))
         ];
     }
 }

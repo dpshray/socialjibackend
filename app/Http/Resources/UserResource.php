@@ -23,6 +23,10 @@ class UserResource extends JsonResource
             "nick_name" => $this->nick_name,
             "email" => $this->email,
             "image" => $this->image,
+            "influencer_rating" => $this->whenLoaded('influencerRatings', function(){
+                $rating = $this->influencerRatings->avg('rating');
+                return ($rating <=0) ? 0 : round($rating,1);
+            })
         ];
     }
 }
