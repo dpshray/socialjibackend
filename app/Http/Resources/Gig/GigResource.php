@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Gig;
 
+use App\Constants\Constants;
 use App\Http\Resources\Pricing\PricingCollection;
 use App\Http\Resources\Pricing\PricingResource;
 use App\Http\Resources\Tag\TagCollection;
@@ -45,7 +46,8 @@ class GigResource extends JsonResource
             'published_at' => $this->when($this->published_at, $this->published_at),
             'pricings' => $this->whenLoaded('gig_pricing', new PricingCollection($this->gig_pricing)),
             'tags' => $this->whenLoaded('tags', new TagCollection($this->tags)),
-            'user' => new UserResource($this->whenLoaded('user'))
+            'user' => new UserResource($this->whenLoaded('user')),
+            'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_GIG))
         ];
     }
 }
