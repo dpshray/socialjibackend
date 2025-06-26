@@ -26,6 +26,7 @@ class AuthController extends Controller
             return $this->apiError('Invalid Credentials');
         }
         $user = auth()->user();
+        $user->loadMissing(['media']);
         $role = $user->getRoleNames()->first();
         event(new Registered($user));
         $user = new UserResource($user);
@@ -62,9 +63,11 @@ class AuthController extends Controller
         return $this->apiSuccess('token refreshed', ['token' => JWTAuth::refresh()]);
     }
 
-    public function userProfile(): JsonResponse
+    public function userProfile()#: JsonResponse
     {
-        $data = new UserResource(auth()->user());
+        $user = auth()->user()->loadMissing(['media','socialProfiles','roles']);
+        $role = $user->getRoleNames()->first();
+        $data = new UserResource($user);
         return $this->apiSuccess('user data', $data);
     }
 
