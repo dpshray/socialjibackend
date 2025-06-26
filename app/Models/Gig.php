@@ -11,6 +11,8 @@ class Gig extends Model implements HasMedia
 {
     use SoftDeletes, InteractsWithMedia;
 
+    protected $perPage = 12;
+
     protected $guarded = [];
 
     public function gig_pricing()
@@ -47,12 +49,13 @@ class Gig extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(Constants::MEDIA_GIG)
+            ->useFallbackUrl(asset('assets/img/default.jpg'))
             ->singleFile()
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
             ->registerMediaConversions(function (Media $media) {
                 $this->addMediaConversion('thumbnail')
-                    ->width(100)
-                    ->height(100)
+                    ->width(200)
+                    ->height(200)
                     ->nonQueued(); #included this since we are not queueing conversions
             });
     }
