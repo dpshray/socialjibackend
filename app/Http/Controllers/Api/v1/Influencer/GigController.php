@@ -26,10 +26,13 @@ class GigController extends Controller
     {
         $this->user = Auth::user();
     }
-
+    /**
+     * for influencer
+     */
     public function index()
     {
-        $gigs = Gig::select('id','title')
+        $gigs = Gig::select('id','title','description')
+                    ->with(['user' => ['media']])
                     ->creator()
                     ->paginate();
         $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
@@ -99,21 +102,35 @@ class GigController extends Controller
             return $this->apiError('Unable to delete gig.', 409);
         }
     }
-
+    /**
+     * for brand
+     */
     public function search(Request $request)
     {
         $gig_name = $request->query('name');
-        $tag_name= $request->query('tag');
-        $gigs = Gig::with('tags:name')
-                ->select('id','title')
+        $tag_id= $request->query('tag_id');
+        $from_price= $request->query('from_price');
+        $to_price= $request->query('to_price');
+        $per_page= $request->query('per_page');
+
+        $gigs = Gig::with(['tags:id,name', 'user' => ['influencerRatings','media'],'media'])
+                ->select('id','user_id','title','description')
                 ->where('title', 'like', "%$gig_name%")
-                ->when($tag_name, function($qry,$val){
-                    $qry->whereHas('tags', function($qry) use($val){
-                        return $qry->where('name','like', "%$val%");
-                    });
+                ->when($tag_id, function($qry,$val){
+                    $qry->whereRelation('tags','tags.id',$val);
                 })
-                ->paginate();
-        $gigs = $gigs->items();
+                ->when(($from_price || $to_price), function($qry) use($from_price,$to_price){
+                    if ($from_price > 0 && $to_price > 0) {
+                        $qry->whereHas('gig_pricing', fn($qry) => $qry->whereBetween('price', [$from_price,$to_price]));
+                    } else if($from_price == null && $to_price > 0){
+                        $qry->whereHas('gig_pricing', fn($qry) => $qry->where('price', '<=', $to_price));
+                    } else{
+                        $qry->whereHas('gig_pricing', fn($qry) => $qry->where('price', '>', $from_price));
+                    }
+                })
+                ->paginate($per_page);
+        $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
+        // $gigs = $gigs->items();
         
         return $this->apiSuccess('gig search results',$gigs);
     }

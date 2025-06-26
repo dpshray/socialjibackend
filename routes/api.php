@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
@@ -23,6 +24,9 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
     Route::middleware([BrandRole::class])->group(function () {
         Route::get('influencer/search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');
         Route::get('gig/search', [GigController::class, 'search'])->name('gig.search');
+        Route::post('rating/influencer', [BrandController::class,'influencerRater']);
+        Route::get('search/influencer', [BrandController::class, 'creatorSearch']);
+        Route::get('search/tag', [BrandController::class, 'searchTag']);
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
     });
 
@@ -38,8 +42,10 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::apiResource('currency', CurrencyController::class);
     });
 });
+Route::middleware([JwtMiddleware::class, VerifyEmail::class, BrandRole::class])->group(function () {
+    Route::post('trustap/create/guest_user', [TrustapAuthController::class, 'createGuestUser'])->name('trustap.create.guest_user');
+});
 
-Route::post('trustap/create/guest_user', [TrustapAuthController::class, 'createGuestUser'])->name('trustap.create.guest_user');
 Route::middleware([TrustapUser::class])->prefix('trustap')->name('trustap.')->controller(TrustapController::class)->group(function () {
     Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
     Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
