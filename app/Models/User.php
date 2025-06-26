@@ -79,4 +79,38 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     {
         return $this->hasRole(Constants::ROLE_INFLUENCER);
     }
+
+    public function tags(){
+        return $this->hasMany(Tag::class);
+    }
+    /**
+     * 
+     */
+    public function influencerRatings(){
+        return $this->hasMany(Rating::class,'influencer_id');
+    }
+    /**
+     * if used by influencer, gets all ratings of their gigs
+    */
+    public function brandRatings(){
+        return $this->hasMany(Rating::class,'brand_id','id');
+    }
+
+    public function socialProfiles(){
+        return $this->hasMany(SocialProfile::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(Constants::MEDIA_USER)
+            ->useFallbackUrl(asset('assets/img/user-default.png'))
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
+            ->registerMediaConversions(function (Media $media) {
+                $this->addMediaConversion('thumbnail')
+                    ->width(200)
+                    ->height(200)
+                    ->nonQueued(); #included this since we are not queueing conversions
+            });
+    }
 }
