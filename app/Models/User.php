@@ -97,7 +97,11 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     }
 
     public function socialProfiles(){
-        return $this->hasMany(SocialProfile::class);
+        return $this->hasMany(SocialProfile::class,'user_id');
+    }
+
+    public function gigs(){
+        return $this->hasMany(Gig::class);
     }
 
     public function registerMediaCollections(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Constants\Constants;
+use App\Http\Resources\Social\SocialProfileResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,8 +32,20 @@ class UserResource extends JsonResource
             }),
             'social_profiles' => $this->whenLoaded('socialProfiles', function(){
                 $SP = $this->socialProfiles;
-                return count($SP) ? $SP : [];
+                return count($SP) ? SocialProfileResource::collection($SP) : [];
             })
         ];
     }
 }
+
+
+// "social_site_id": 1,
+// "profile_url": "https://gutmann.com/cumque-adipisci-sint-excepturi.html",
+// "follower_count": 23069,
+// "following_count": 21427,
+// "post_count": 41968,
+// "avg_like_per_post_count": 35,
+// "avg_comment_per_post_count": 30,
+// "follower_growth_rate_per_week": 47,
+// "highest_like": 835008,
+// "lowest_like": 1577

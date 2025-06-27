@@ -68,8 +68,8 @@ class AuthController extends Controller
 
     public function userProfile()#: JsonResponse
     {
-        $user = auth()->user()->loadMissing(['media','socialProfiles','roles']);
-        $role = $user->getRoleNames()->first();
+        $user = auth()->user()->loadMissing(['influencerRatings','media', 'socialProfiles.socialSite:id,name,label','roles']);
+        // $role = $user->getRoleNames()->first();
         $data = new UserResource($user);
         return $this->apiSuccess('user data', $data);
     }
