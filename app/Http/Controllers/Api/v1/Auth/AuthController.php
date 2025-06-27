@@ -18,10 +18,13 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request)#: JsonResponse
     {
         $validated = $request->validated();
-
+        $email_is_unverified = DB::table('users')->where([['email', $validated['email']], ['email_verified_at', '!=', null]])->doesntExist();
+        if ($email_is_unverified) {
+            return $this->apiError('email is not verified', 403);
+        }
         if (! $token = JWTAuth::attempt($validated)) {
             return $this->apiError('Invalid Credentials');
         }
