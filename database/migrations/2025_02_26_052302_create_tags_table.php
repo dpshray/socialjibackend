@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->integer('id')->autoIncrement()->primary();
-            $table->string('name')->unique();
+            $table->string('name');
             $table->integer('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
             // $table->foreignId('user_id')->constrained('users');
