@@ -42,12 +42,11 @@ class GigResource extends JsonResource
             'description' => $this->when($this->description, $this->description),
             'requirements' => $this->when($this->requirements, $this->requirements),
             'features' => $this->when($this->features, $this->features),
-            'image' => $this->when($this->image, $this->image),
             'published_at' => $this->when($this->published_at, $this->published_at),
+            'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_GIG)),
             'pricings' => $this->whenLoaded('gig_pricing', new PricingCollection($this->gig_pricing)),
             'tags' => $this->whenLoaded('tags', new TagCollection($this->tags)),
-            'user' => new UserResource($this->whenLoaded('user')),
-            'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_GIG))
+            'user' => $this->whenLoaded('user', new UserResource($this->user)),
         ];
     }
 }

@@ -20,7 +20,6 @@ class BrandRole
     {
         if (! auth()->user() || ! auth()->user()->hasRole(Constants::ROLE_BRAND)) {
             return $this->apiError('Forbidden', 401);
-            // return response()->json(['error' => 'Forbidden'], 401);
         }
 
         return $next($request);

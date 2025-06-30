@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\v1\Brand\BrandController;
+use App\Http\Controllers\Api\v1\Brand\BrandReviewController;
 use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
@@ -24,10 +25,23 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
     Route::middleware([BrandRole::class])->group(function () {
         Route::get('influencer/search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');
         Route::get('gig/search', [GigController::class, 'search'])->name('gig.search');
-        Route::post('rating/influencer', [BrandController::class,'influencerRater']);
+        
         Route::get('search/influencer', [BrandController::class, 'creatorSearch']);
         Route::get('search/tag', [BrandController::class, 'searchTag']);
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
+        #Review gig
+        /**
+         * review/{gig} -post
+         * review/{gig} - list
+         * review/{review} - patch
+         * review/{review} - delete
+         */
+        Route::controller(BrandReviewController::class)->group(function(){
+            Route::post('save-review/{gig}', 'storeGigReview');
+            Route::get('list-gig-review/{gig}', 'fetchGigReviews');
+            Route::post('update-gig-review/{review}', 'gigReviewUpdater');
+            Route::delete('delete-review/{review}', 'gigReviewRemover');
+        });
     });
 
     Route::middleware([InfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {

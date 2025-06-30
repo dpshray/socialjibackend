@@ -6,6 +6,7 @@ use App\Constants\Constants;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Tag\TagCollection;
 use App\Http\Resources\UserCollection;
+use App\Models\Gig;
 use App\Models\Tag;
 use App\Models\User;
 use App\Traits\PaginationTrait;
@@ -14,20 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 class BrandController extends Controller {
     use PaginationTrait;
-
-    public function influencerRater(Request $request, User $influencer)
-    {
-        $validated = $request->validate([
-            'rating' => ['required', 'numeric', 'between:1,5']
-        ]);
-        $validated['influencer_id'] = $influencer->id;
-        Auth::user()->brandRatings()->updateOrCreate(
-            ['influencer_id' => $influencer->id],
-            ['rating' => $validated['rating']]
-        );
-        return $this->apiSuccess('gig rated successfully');
-    }
-
+    
     public function creatorSearch(Request $request){
         $keyword = $request->query('name');
         $per_page = $request->query('per_page');

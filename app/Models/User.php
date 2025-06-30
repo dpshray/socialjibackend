@@ -23,7 +23,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use AuthTrait, DateOnlyTrait, HasFactory, HasRoles, Notifiable, SoftDeletes, InteractsWithMedia;
 
-    protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id'];
+    protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id', 'about'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -86,14 +86,14 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     /**
      * 
      */
-    public function influencerRatings(){
+    /* public function influencerRatings(){
         return $this->hasMany(Rating::class,'influencer_id');
-    }
+    } */
     /**
      * if used by influencer, gets all ratings of their gigs
     */
-    public function brandRatings(){
-        return $this->hasMany(Rating::class,'brand_id','id');
+    public function brandReviews(){
+        return $this->hasMany(Review::class);
     }
 
     public function socialProfiles(){

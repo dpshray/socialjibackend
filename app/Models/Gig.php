@@ -46,6 +46,10 @@ class Gig extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
+    public function reviews(){
+        return $this->hasMany(Review::class);
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(Constants::MEDIA_GIG)
