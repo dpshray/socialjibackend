@@ -32,7 +32,7 @@ class GigController extends Controller
     public function index()
     {
         $gigs = Gig::select('id','title','description')
-                    ->with(['user' => ['media']])
+                    ->with(['media','user' => ['media']])
                     ->creator()
                     ->latest()
                     ->paginate();
