@@ -34,6 +34,7 @@ class GigController extends Controller
         $gigs = Gig::select('id','title','description')
                     ->with(['user' => ['media']])
                     ->creator()
+                    ->latest()
                     ->paginate();
         $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
         return $this->apiSuccess('list of available gigs of user : '.$this->user->nick_name, $gigs);
