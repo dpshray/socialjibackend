@@ -17,9 +17,8 @@ return new class extends Migration
             $table->foreign('review_id')->references('id')->on('reviews')->cascadeOnDelete()->cascadeOnUpdate();
             $table->integer('user_id');
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->text('comment');
+            $table->boolean('vote');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
