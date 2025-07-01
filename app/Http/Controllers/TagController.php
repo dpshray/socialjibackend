@@ -18,8 +18,8 @@ class TagController extends Controller
 
     public function index()
     {
-        $tags = Tag::creator()->select('id','name')->paginate();
-        $tags = $this->setupPagination($tags, TagCollection::class)->data;
+        $tags = Tag::creator()->select('id','name')->get();
+        // $tags = $this->setupPagination($tags, TagCollection::class)->data;
         return $this->apiSuccess('list of available tags', $tags);
     }
 
