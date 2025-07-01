@@ -30,12 +30,6 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::get('search/tag', [BrandController::class, 'searchTag']);
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
         #Review gig
-        /**
-         * review/{gig} -post
-         * review/{gig} - list
-         * review/{review} - patch
-         * review/{review} - delete
-         */
         Route::controller(BrandReviewController::class)->group(function(){
             Route::post('save-review/{gig}', 'storeGigReview');
             Route::get('list-gig-review/{gig}', 'fetchGigReviews');
@@ -48,9 +42,6 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::apiResource('gig', GigController::class);
         Route::get('tag/search', [TagController::class, 'search'])->name('tag.search');
         Route::apiResource('tag', TagController::class)->except(['show']);
-
-        
-        
     });
     Route::middleware([AdminRole::class])->prefix('admin')->group(function(){
         Route::apiResource('currency', CurrencyController::class);

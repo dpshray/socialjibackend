@@ -30,20 +30,28 @@ class BrandReviewController extends Controller
 
     public function fetchGigReviews(Request $request, Gig $gig) {
         $per_page = $request->query('per_page');
-        // $gig->loadMissing(['reviews.user.media', 'reviews.helpfuls']);
         $paginated_reviews = $gig->reviews()->with(['user.media', 'helpfuls'])->latest()->paginate($per_page);
         $reviews = $paginated_reviews->items();
         $reviews = $this->setupPagination($paginated_reviews, ReviewCollection::class)->data;
         return $this->apiSuccess("gig title: {$gig->title} reviews", $reviews);
     }
 
-    public function gigReviewUpdater(ReviewRequest $request, Review $review) {}
-
-    public function gigReviewRemover(Request $request, Review $review) {}
+    public function gigReviewUpdater(ReviewRequest $request, Review $review) {
+        $this->isReviewOwner($review);
+        $data = $request->validated();
+        $review->update($data);
+        return $this->apiSuccess('review updated', $data);
+    }
+    
+    public function gigReviewRemover(Request $request, Review $review) {
+        $this->isReviewOwner($review);
+        $review->delete();
+        return $this->apiSuccess('review deleted');
+    }
 
     private function isReviewOwner(Review $review)
     {
-        if ($review->isNot(Auth::user())) {
+        if ($review->user_id != Auth::id()) {
             throw new ForbiddenItemAccessException('You have no access to this review');
         }
     }
