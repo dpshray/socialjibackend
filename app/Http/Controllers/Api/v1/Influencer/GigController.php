@@ -60,16 +60,25 @@ class GigController extends Controller
         if (! $gig->isCreator()) {
             return $this->apiError('Forbidden', 403);
         }
+
         try {
-            $data = $gig->load(['media','gig_pricing', 'tags']);
-            $data = new GigResource($data);
+            $gig = Gig::with([
+                'reviews' => fn($q) => $q->latest()->take(5),
+                'reviews.user.media',
+                'reviews.helpfuls',
+                'media',
+                'gig_pricing',
+                'tags',
+            ])->find($gig->id);
+
+            $data = new GigResource($gig);
             return $this->apiSuccess('gig detail', $data);
         } catch (Throwable $th) {
-            Log::error("Error while showing gig id:  $gig->id(). ERROR: ".$th->getMessage());
-            return $th->getMessage();
+            Log::error("Error while showing gig id: {$gig->id}. ERROR: " . $th->getMessage());
             return $this->apiError('Unable to show gig.');
         }
     }
+
 
     public function update(StoreGigRequest $request, Gig $gig)
     {
