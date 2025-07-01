@@ -49,6 +49,19 @@ class BrandReviewController extends Controller
         return $this->apiSuccess('review deleted');
     }
 
+    public function markReviewHelpful(Request $request, Review $review){
+        $form_data = $request->validate([
+            'vote' => 'required|between:0,1'
+        ]);
+        $review->helpfuls()->updateOrCreate([
+            'user_id' => Auth::id(), 'review_id' => $review->id
+        ],[
+            'vote' => $form_data['vote']
+        ]);
+        $status = ($form_data['vote'] == 1) ? 'up voted': 'down voted';
+        return $this->apiSuccess("review {$status}");
+    }
+
     private function isReviewOwner(Review $review)
     {
         if ($review->user_id != Auth::id()) {

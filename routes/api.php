@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
 use App\Http\Controllers\Api\v1\TrustapController;
+use App\Http\Controllers\Influencer\InfluencerReviewController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TrustapAuthController;
 use App\Http\Middleware\AdminRole;
@@ -35,6 +36,7 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
             Route::get('list-gig-review/{gig}', 'fetchGigReviews');
             Route::post('update-gig-review/{review}', 'gigReviewUpdater');
             Route::delete('delete-review/{review}', 'gigReviewRemover');
+            Route::post('review-helpful/{review}', 'markReviewHelpful');
         });
     });
 
