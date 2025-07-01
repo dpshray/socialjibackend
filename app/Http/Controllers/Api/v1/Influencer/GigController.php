@@ -60,9 +60,8 @@ class GigController extends Controller
         if (! $gig->isCreator()) {
             return $this->apiError('Forbidden', 403);
         }
-
         try {
-            $data = $gig->load(['gig_pricing', 'tags']);
+            $data = $gig->load(['media','gig_pricing', 'tags']);
             $data = new GigResource($data);
             return $this->apiSuccess('gig detail', $data);
         } catch (Throwable $th) {
