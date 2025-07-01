@@ -54,7 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
         $exceptions->render(function (ForbiddenItemAccessException $e, Request $request) use($responder) {
             if ($request->expectsJson()) {
-                return $responder->apiError('Forbidden', 403);
+                return $responder->apiError($e->getMessage() ?? 'Forbidden', 403);
             }
         });
 
