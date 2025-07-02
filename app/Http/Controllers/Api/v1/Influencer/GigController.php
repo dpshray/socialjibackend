@@ -57,9 +57,9 @@ class GigController extends Controller
 
     public function show(Gig $gig)
     {
-        if (! $gig->isCreator()) {
+        /* if (! $gig->isCreator()) {
             return $this->apiError('Forbidden', 403);
-        }
+        } */
 
         try {
             $gig = Gig::with([
@@ -122,7 +122,7 @@ class GigController extends Controller
         $to_price= $request->query('to_price');
         $per_page= $request->query('per_page');
 
-        $gigs = Gig::with(['tags:id,name', 'user' => ['influencerRatings','media'],'media'])
+        $gigs = Gig::with(['tags:id,name','reviews.user.media','user.media','media'])
                 ->select('id','user_id','title','description')
                 ->where('title', 'like', "%$gig_name%")
                 ->when($tag_id, function($qry,$val){
