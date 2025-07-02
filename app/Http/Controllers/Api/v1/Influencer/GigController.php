@@ -121,8 +121,11 @@ class GigController extends Controller
         $from_price= $request->query('from_price');
         $to_price= $request->query('to_price');
         $per_page= $request->query('per_page');
-
-        $gigs = Gig::with(['tags:id,name','reviews.user.media','user.media','media'])
+        $gigs = Gig::with([
+            'tags:id,name', 
+            'user:id,nick_name,first_name,middle_name,last_name' => ['brandReviews','media'],
+            'media'
+            ])
                 ->select('id','user_id','title','description')
                 ->where('title', 'like', "%$gig_name%")
                 ->when($tag_id, function($qry,$val){
