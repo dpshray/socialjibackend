@@ -20,7 +20,7 @@ class BrandController extends Controller {
         $keyword = $request->query('name');
         $per_page = $request->query('per_page');
         $creators = User::select('id','nick_name','about')
-                        ->with(['socialProfiles'])
+                        ->with(['media','socialProfiles'])
                         ->whereRelation('roles','name',Constants::ROLE_INFLUENCER)
                         ->where('nick_name','like', '%'.$keyword.'%')
                         ->paginate($per_page);
