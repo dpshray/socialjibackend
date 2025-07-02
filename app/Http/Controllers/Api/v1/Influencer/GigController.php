@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Influencer\Gig\StoreGigRequest;
 use App\Http\Resources\Gig\GigCollection;
 use App\Http\Resources\Gig\GigResource;
+use App\Http\Resources\Search\GigSearchResource;
 use App\Models\Gig;
 use App\Services\GigService;
 use Carbon\Carbon;
@@ -141,7 +142,8 @@ class GigController extends Controller
                     }
                 })
                 ->paginate($per_page);
-        $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
+                // return GigSearchResource::collection($gigs);
+        $gigs = $this->setupPagination($gigs, fn($items) => GigSearchResource::collection($items))->data;
         // $gigs = $gigs->items();
         
         return $this->apiSuccess('gig search results',$gigs);
