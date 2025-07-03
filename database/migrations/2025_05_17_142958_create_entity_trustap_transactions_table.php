@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreign('gig_pricing_id')->references('id')->on('gig_pricing')->onDelete('cascade')->onUpdate('cascade');
             // $table->foreignId('gig_pricing_id')->constrained('gig_pricing');
             $table->string('gig_title');
-            $table->text('descripion')->nullable();
+            $table->text('description')->nullable();
 
             $table->unsignedBigInteger('transactionId')->unique();
             $table->string('transactionType');
