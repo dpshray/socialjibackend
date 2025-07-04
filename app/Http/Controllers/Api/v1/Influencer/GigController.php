@@ -125,7 +125,7 @@ class GigController extends Controller
                 'user:id,nick_name,first_name,middle_name,last_name' => ['brandReviews','media'],
                 'media'
                 ])
-                ->when(!collect(Auth::user()->roles)->contains('name', Constants::ROLE_BRAND), function($qry){
+                ->when(!Auth::user()->isBrand(), function($qry){
                     return $qry->where('user_id', Auth::id());
                 })
                 ->select('id','user_id','title','description')
