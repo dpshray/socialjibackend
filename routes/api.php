@@ -23,13 +23,12 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
     Route::get('pricing-tier', [PricingTierController::class, 'index'])->name('pricing_tier.index');
     Route::middleware([BrandRole::class])->group(function () {
         Route::get('influencer/search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');
-        Route::get('gig/search', [GigController::class, 'search'])->name('gig.search');
-        
         Route::get('search/influencer', [BrandController::class, 'creatorSearch']);
         Route::get('search/tag', [BrandController::class, 'searchTag']);
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
     });
     Route::middleware([BrandInfluencerRole::class])->group(function(){
+        Route::get('gig/search', [GigController::class, 'search'])->name('gig.search');
         Route::get('influencer/gig/{gig}', [GigController::class, 'show']);
         Route::controller(GigReviewController::class)->group(function(){
             Route::post('save-review/{gig}', 'storeGigReview'); #influencer brand

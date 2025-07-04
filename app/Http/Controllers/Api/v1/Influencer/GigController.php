@@ -112,9 +112,7 @@ class GigController extends Controller
             return $this->apiError('Unable to delete gig.', 409);
         }
     }
-    /**
-     * for brand
-     */
+
     public function search(Request $request)
     {
         $gig_name = $request->query('name');
@@ -123,10 +121,13 @@ class GigController extends Controller
         $to_price= $request->query('to_price');
         $per_page= $request->query('per_page');
         $gigs = Gig::with([
-            'tags:id,name', 
-            'user:id,nick_name,first_name,middle_name,last_name' => ['brandReviews','media'],
-            'media'
-            ])
+                'tags:id,name', 
+                'user:id,nick_name,first_name,middle_name,last_name' => ['brandReviews','media'],
+                'media'
+                ])
+                ->when(!collect(Auth::user()->roles)->contains('name', Constants::ROLE_BRAND), function($qry){
+                    return $qry->where('user_id', Auth::id());
+                })
                 ->select('id','user_id','title','description')
                 ->where('title', 'like', "%$gig_name%")
                 ->when($tag_id, function($qry,$val){
