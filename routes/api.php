@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\GigReviewController;
@@ -25,6 +26,7 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::get('influencer/search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');
         Route::get('search/influencer', [BrandController::class, 'creatorSearch']);
         Route::get('search/tag', [BrandController::class, 'searchTag']);
+        Route::get('fetch-auth-user/{user}', [AuthController::class, 'fetchUserProfile']);
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
     });
     Route::middleware([BrandInfluencerRole::class])->group(function(){

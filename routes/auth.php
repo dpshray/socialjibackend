@@ -19,6 +19,7 @@ Route::controller(AuthController::class)->middleware([JwtMiddleware::class, Veri
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
     Route::get('profile', 'userProfile');
+    Route::get('get-user-profile/{user}', 'fetchUserProfile');
     Route::delete('delete-account', 'accountRemover');
 });
 

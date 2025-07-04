@@ -66,7 +66,7 @@ class AuthController extends Controller
         return $this->apiSuccess('token refreshed', ['token' => JWTAuth::refresh()]);
     }
 
-    public function userProfile()#: JsonResponse
+    public function userProfile(): JsonResponse
     {
         $user = auth()->user()->loadMissing(['brandReviews','media', 'socialProfiles.socialSite:id,name,label','roles']);
         // $role = $user->getRoleNames()->first();
@@ -83,5 +83,14 @@ class AuthController extends Controller
         auth()->user()->delete();
         JWTAuth::invalidate(JWTAuth::getToken());
         return $this->apiError('Account removed successfully');
+    }
+
+    public function fetchUserProfile(User $user){
+        if ($user->isBrand()) {
+            return $this->apiError('the user is not an influencer',404);
+        }
+        $user = $user->loadMissing(['brandReviews', 'media', 'socialProfiles.socialSite:id,name,label', 'roles']);
+        $data = new UserResource($user);
+        return $this->apiSuccess('user profile data', $data);
     }
 }
