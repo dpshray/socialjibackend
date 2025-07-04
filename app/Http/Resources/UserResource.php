@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Constants\Constants;
+use App\Http\Resources\Gig\GigResource;
 use App\Http\Resources\Social\SocialProfileResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -34,6 +35,14 @@ class UserResource extends JsonResource
             'social_profiles' => $this->whenLoaded('socialProfiles', function(){
                 $SP = $this->socialProfiles;
                 return count($SP) ? SocialProfileResource::collection($SP) : [];
+            }),
+            'gig' => $this->whenLoaded('gigs', function(){
+                return [
+                    'total' => $this->gigs->count(),
+                    'published' => $this->gigs->where('status',1)->count(),
+                    'gigs_sold_count' => rand(100,1000),
+                    'top_selling_gig' => new GigResource($this->gigs->first()),
+                ];
             })
         ];
     }

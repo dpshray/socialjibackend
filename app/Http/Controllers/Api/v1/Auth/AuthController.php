@@ -89,7 +89,7 @@ class AuthController extends Controller
         if ($user->isBrand()) {
             return $this->apiError('the user is not an influencer',404);
         }
-        $user = $user->loadMissing(['brandReviews', 'media', 'socialProfiles.socialSite:id,name,label', 'roles']);
+        $user = $user->loadMissing(['brandReviews', 'media', 'socialProfiles.socialSite:id,name,label', 'roles','gigs.media']);
         $data = new UserResource($user);
         return $this->apiSuccess('user profile data', $data);
     }
