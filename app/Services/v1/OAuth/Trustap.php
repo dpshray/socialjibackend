@@ -4,8 +4,10 @@ namespace App\Services\v1\OAuth;
 
 use App\Models\User;
 use App\Models\UserTrustapMetadata;
+use App\Services\v1\Payment\TrustAppException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Trustap
 {
@@ -122,12 +124,12 @@ class Trustap
         if ($trustapUser) {
             throw new DuplicateEmailException;
         }
-
-        $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
+        $response = Http::withBasicAuth('943489be-750d-40de-9bbc-52b551429274', '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
             ])
-            ->post(config('services.trustap.url').'/guest_users', [
+            ->post('https://dev.stage.trustap.com/api/v1/guest_users', [
                 'email' => $data['email'],
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -137,7 +139,10 @@ class Trustap
                     'ip' => $data['ip'],
                 ],
             ]);
-
+        if ($response->failed() && $response->status() == 400) {
+            $error_to_object = json_decode($response->body());
+            throw new TrustAppException($error_to_object->error);
+        }
         return UserTrustapMetadata::create([
             'user_id' => auth()->user()->id,
             'trustapGuestUserId' => $response['id'],

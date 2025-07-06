@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\v1\OAuth\DuplicateEmailException;
 use App\Services\v1\OAuth\Trustap;
+use App\Services\v1\Payment\TrustAppException;
+use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 /**
@@ -14,6 +18,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  */
 class TrustapAuthController extends Controller
 {
+    use ResponseTrait;
+
     public function __construct(private Trustap $trustap) {}
 
     public function redirectToTrustap()
@@ -29,9 +35,9 @@ class TrustapAuthController extends Controller
             // $token = JWTAuth::fromUser($user);
 
             // return $this->respondSuccess(['token' => $token], 'User registered successfully.', 201);
-            return $this->respondOk('User registered successfully.', 201);
+            return $this->apiSuccess('User registered successfully.');
         } catch (DuplicateEmailException $e) {
-            return $this->respondError('Email Already Exists');
+            return $this->apiSuccess('Email Already Exists');
         }
     }
 
@@ -48,22 +54,26 @@ class TrustapAuthController extends Controller
             // For testing purposes, remove this
             // $user = \App\Models\User::find(16);
             // auth()->login($user);
-            $trustapData = $this->trustap->createGuestUser([
-                'email' => auth()->user()->email,
-                'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
-                'country_code' => $validated['country_code'],
-                'timestamp' => time(),
-                'ip' => request()->ip(),
-            ]);
-
-            if (! $trustapData) {
-                return $this->respondError('Unable to create guest user.');
+            $trustapData = null;
+            DB::transaction(function () use($validated, &$trustapData){                
+                $trustapData = $this->trustap->createGuestUser([
+                    'email' => Auth::user()->email,
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                    'country_code' => $validated['country_code'],
+                    'timestamp' => time(),
+                    'ip' => request()->ip(),
+                ]);
+            });
+            if (!$trustapData) {
+                return $this->apiError('Unable to create guest user.');
             }
-
-            return $this->respondSuccess(['data' => $trustapData], 'Guest user created successfully.', 201);
-        } catch (DuplicateEmailException $e) {
-            return $this->respondError('Trustap user already exists.');
+            return $this->apiSuccess('Guest user created successfully.', $trustapData);
+        } catch(TrustAppException $e){
+            return $this->apiError($e->getMessage());
+        } 
+        catch (\Exception $e) {
+            return $this->apiError('Trustap user already exists.');
         }
     }
 }

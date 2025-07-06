@@ -27,7 +27,10 @@ class TrustapPaymentGateway
                 'price' => $price,
                 'currency' => $currency,
             ]);
-
+        if ($response->failed() && $response->status() == 400) {
+            $error_to_object = json_decode($response->body());
+            throw new TrustAppException($error_to_object->error);
+        }
         return $response->json();
     }
 
@@ -39,12 +42,14 @@ class TrustapPaymentGateway
 
         $buyerId = auth()->user()->userTrustapMetadata->trustap_user_id;
         $sellerId = $gig->user?->userTrustapMetadata?->trustapGuestUserId;
-
+        
         if (! $buyerId || ! $sellerId) {
             throw new Exception('Buyer or Seller Trustap user not found.');
         }
 
         $gigPricing = $gig->gig_pricing->where('id', $data['pricing_tier'])->first();
+        $currency_code = strtolower($gigPricing->pivot->currency->code);
+        // dd($currency_code);
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
@@ -54,10 +59,10 @@ class TrustapPaymentGateway
                 'seller_id' => $sellerId,
                 'buyer_id' => $buyerId,
                 'creator_role' => $data['role'],
-                'currency' => $gigPricing->pivot->currency,
+                'currency' => $currency_code,
                 'description' => $data['description'],
                 'deposit_price' => (int) $gigPricing->pivot->price,
-                'deposit_charge' => $this->getTrustapFee($gigPricing->pivot->price, $gigPricing->pivot->currency)['charge'],
+                'deposit_charge' => $this->getTrustapFee($gigPricing->pivot->price, $currency_code)['charge'],
                 'charge_calculator_version' => 3,
                 'skip_remainder' => true,
             ]);
@@ -89,13 +94,20 @@ class TrustapPaymentGateway
 
     public function paymentSuccess(array $data)
     {
+        $transaction = EntityTrustapTransaction::join('user_trustap_metadata', 'user_trustap_metadata.trustapGuestUserId','=', 'entity_trustap_transactions.buyerId')
+                        ->where('transactionId', $data['tx_id'])
+                        ->firstOrFail();
+        /**
+         * in this code $data and func_get_args() is basically 
+         * the same things(from former coder)
+         */
+        $data['user_id'] = $transaction->user_id;
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
         }
 
         logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
-        $transaction = EntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
 
         return $transaction->update([
             'status' => $data['code'],

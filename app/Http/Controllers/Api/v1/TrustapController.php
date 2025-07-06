@@ -9,6 +9,7 @@ use App\Services\v1\Payment\PaymentFailedException;
 use App\Services\v1\Payment\TransactionFailedException;
 use App\Services\v1\Payment\TrustapPaymentGateway;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
@@ -35,34 +36,34 @@ class TrustapController extends Controller
                 'description' => ['required', 'string', 'max:255'],
             ]);
 
-            $redirectUrl = $this->trustapPaymentGateway->createTransaction($validated, $gig);
-
+            $redirectUrl = null;
+            DB::transaction(function () use(&$redirectUrl, $validated, $gig){
+                $redirectUrl = $this->trustapPaymentGateway->createTransaction($validated, $gig);
+            });
+            Log::info($redirectUrl);
             return redirect()->away($redirectUrl);
         } catch (TransactionFailedException $e) {
-            return $this->respondError($e->getMessage());
+            return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
             Log::error('Error creating transaction: '.$e->getMessage());
-
-            return $this->respondError('An error occurred while creating the transaction.');
+            return $this->apiError('An error occurred while creating the transaction.');
         }
     }
 
     public function paymentCallback(Request $request)
     {
+        // dd($request->all());
         try {
             $result = $this->trustapPaymentGateway->paymentSuccess($request->all());
-
             if (! $result) {
-                return $this->respondError('Payment processing failed.');
+                return $this->apiError('Payment processing failed.');
             }
-
-            return $this->respondOK('Payment processed successfully.', 200);
+            return $this->apiSuccess('Payment processed successfully.');
         } catch (PaymentFailedException $e) {
-            return $this->respondError($e);
+            return $this->apiError($e);
         } catch (\Exception $e) {
             Log::error('An error occurred during payment callback: '.$e->getMessage());
-
-            return $this->respondError('An error occurred during payment processing.');
+            return $this->apiError('An error occurred during payment processing.');
         }
     }
 
@@ -128,5 +129,9 @@ class TrustapController extends Controller
 
             return $this->respondError('An error occurred while claiming the payout: ');
         }
+    }
+
+    function testResponse(){
+        return $this->apiSuccess('payment has been completed');
     }
 }
