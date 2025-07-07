@@ -6,6 +6,7 @@ use App\Constants\Constants;
 use App\Models\EntityTrustapTransaction;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TrustapPaymentGateway
 {
@@ -94,14 +95,18 @@ class TrustapPaymentGateway
 
     public function paymentSuccess(array $data)
     {
+        if ($data['trustap_status'] !== 'cancelled') {
+            Log::info('Payment has been cancelled');
+            throw new PaymentFailedException('Payment has been cancelled.');
+        }
         $transaction = EntityTrustapTransaction::join('user_trustap_metadata', 'user_trustap_metadata.trustapGuestUserId','=', 'entity_trustap_transactions.buyerId')
                         ->where('transactionId', $data['tx_id'])
                         ->firstOrFail();
+        $data['user_id'] = $transaction->user_id;
         /**
          * in this code $data and func_get_args() is basically 
          * the same things(from former coder)
          */
-        $data['user_id'] = $transaction->user_id;
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
