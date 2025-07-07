@@ -40,8 +40,9 @@ class TrustapController extends Controller
             DB::transaction(function () use(&$redirectUrl, $validated, $gig){
                 $redirectUrl = $this->trustapPaymentGateway->createTransaction($validated, $gig);
             });
-            Log::info($redirectUrl);
-            return redirect()->away($redirectUrl);
+            // Log::info($redirectUrl);
+            // return redirect()->away($redirectUrl);
+            return $this->apiSuccess('payment gateway url', ['trustap_url' => $redirectUrl]);
         } catch (TransactionFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
@@ -60,7 +61,7 @@ class TrustapController extends Controller
             }
             return $this->apiSuccess('Payment processed successfully.');
         } catch (PaymentFailedException $e) {
-            return $this->apiError($e);
+            return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
             Log::error('An error occurred during payment callback: '.$e->getMessage());
             return $this->apiError('An error occurred during payment processing.');
