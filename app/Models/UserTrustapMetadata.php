@@ -32,4 +32,14 @@ class UserTrustapMetadata extends Model
             ? Constants::TRUSTAP_FULL_USER
             : Constants::TRUSTAP_GUEST_USER;
     }
+
+    #used in buyer query is user type is guest_user
+    public function guestUserTransactions(){
+        return $this->hasMany(EntityTrustapTransaction::class, 'buyerId', 'trustapGuestUserId');
+    }
+
+    #used in buyer query is user type is full_user
+    public function fullUserTransactions(){
+        return $this->hasMany(EntityTrustapTransaction::class, 'buyerId', 'trustapFullUserId');
+    }
 }

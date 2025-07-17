@@ -54,7 +54,7 @@ class TrustapPaymentGateway
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => $buyerId,
+                'Trustap-User' => $sellerId,
             ])
             ->post(config('services.trustap.url').'/p2p/me/transactions/create_with_guest_user', [
                 'seller_id' => $sellerId,
@@ -66,6 +66,7 @@ class TrustapPaymentGateway
                 'deposit_charge' => $this->getTrustapFee($gigPricing->pivot->price, $currency_code)['charge'],
                 'charge_calculator_version' => 3,
                 'skip_remainder' => true,
+                'duration' => $data['duration']
             ]);
 
         $response = $response->json();
@@ -73,7 +74,8 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, 'Failed to create transaction.');
             throw new Exception('Failed to create transaction: '.$response['error']);
         }
-
+        Log::debug('createTransaction : ',$response);
+        
         $transaction = EntityTrustapTransaction::create([
             'gig_id' => $gig->id,
             'gig_pricing_id' => $gigPricing->id,
@@ -95,28 +97,32 @@ class TrustapPaymentGateway
 
     public function paymentSuccess(array $data)
     {
-        if ($data['trustap_status'] !== 'cancelled') {
-            Log::info('Payment has been cancelled');
-            throw new PaymentFailedException('Payment has been cancelled.');
-        }
-        $transaction = EntityTrustapTransaction::join('user_trustap_metadata', 'user_trustap_metadata.trustapGuestUserId','=', 'entity_trustap_transactions.buyerId')
-                        ->where('transactionId', $data['tx_id'])
-                        ->firstOrFail();
-        $data['user_id'] = $transaction->user_id;
-        /**
-         * in this code $data and func_get_args() is basically 
-         * the same things(from former coder)
-         */
+        // Step 1: Get the transaction ID using the join
+        $transaction_joined_query = EntityTrustapTransaction::select('entity_trustap_transactions.id as et_transaction_id', 'user_id')
+                            ->join(
+                                'user_trustap_metadata',
+                                'user_trustap_metadata.trustapGuestUserId',
+                                '=',
+                                'entity_trustap_transactions.buyerId'
+                            )
+                            ->where('transactionId', $data['tx_id'])
+                            ->firstOrFail();
+            // ->value('entity_trustap_transactions.id'); // Only get the ID
+            // dd($transaction);
+        // Step 2: Load the Eloquent model
+        // Step 3: Use the Eloquent model as needed
+        $data['user_id'] = $transaction_joined_query->user_id;
+        
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
         }
-
+        
         logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
-
-        return $transaction->update([
-            'status' => $data['code'],
-        ]);
+        return EntityTrustapTransaction::findOrFail($transaction_joined_query->et_transaction_id)
+                ->update([
+                    'status' => $data['code'],
+                ]);
     }
 
     // public function transferFundsByCards()
@@ -179,6 +185,7 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, $response['error']);
             throw new PaymentFailedException('Failed to accept deposit: ');
         }
+        Log::debug('sellerAcceptDeposit : ', $response);
 
         logInfo(__METHOD__, func_get_args(), $response, 'Seller Accept Deposit Successfully.');
 
@@ -188,14 +195,13 @@ class TrustapPaymentGateway
 
     }
 
-    public function buyerConfirmsHandover($entityTrustapTransaction)
+    public function buyerConfirmsHandover(EntityTrustapTransaction $entityTrustapTransaction)
     {
         if (auth()->user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to confirm the handover.');
         }
 
         $buyerId = auth()->user()->userTrustapMetadata->trustap_user_id;
-
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
@@ -204,12 +210,12 @@ class TrustapPaymentGateway
             ->post(config('services.trustap.url')."/p2p/transactions/$entityTrustapTransaction->transactionId/confirm_handover_with_guest_user");
 
         $response = $response->json();
-
+            
         if (isset($response['error'])) {
             logError(__METHOD__, func_get_args(), $response, $response['error']);
             throw new PaymentFailedException('Failed to confirm handover.');
         }
-
+        Log::debug('buyerConfirmsHandover : ', $response);
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
         return $entityTrustapTransaction->update([
@@ -238,6 +244,7 @@ class TrustapPaymentGateway
         $data = $response->json();
 
         if (isset($data['error'])) {
+            dd($data);
             logError(__METHOD__, func_get_args(), $data, 'Failed to submit complaint.');
             throw new PaymentFailedException('Failed to submit complaint.');
         }

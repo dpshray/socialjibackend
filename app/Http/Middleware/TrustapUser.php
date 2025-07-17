@@ -22,7 +22,6 @@ class TrustapUser
         // auth()->login($user);
         // dd(auth()->id());
         $trustapUser = UserTrustapMetadata::whereUserId(auth()->id())->first();
-
         if (! $trustapUser) {
             return $this->apiError('Trustap user not found.', 404);
         }

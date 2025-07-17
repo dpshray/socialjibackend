@@ -124,12 +124,12 @@ class Trustap
         if ($trustapUser) {
             throw new DuplicateEmailException;
         }
-        $response = Http::withBasicAuth('943489be-750d-40de-9bbc-52b551429274', '')
+        $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json'
             ])
-            ->post('https://dev.stage.trustap.com/api/v1/guest_users', [
+            ->post(config('services.trustap.url').'/guest_users', [
                 'email' => $data['email'],
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -143,6 +143,7 @@ class Trustap
             $error_to_object = json_decode($response->body());
             throw new TrustAppException($error_to_object->error);
         }
+        Log::info('createGuestUser : '.$response);
         return UserTrustapMetadata::create([
             'user_id' => auth()->user()->id,
             'trustapGuestUserId' => $response['id'],
