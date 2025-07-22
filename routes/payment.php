@@ -17,10 +17,9 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class/* , BrandRole::class
     Route::post('trustap/create/guest_user', [TrustapAuthController::class, 'createGuestUser'])->name('trustap.create.guest_user');
 });
 
-Route::prefix('trustap')
-    ->name('trustap.')
-    ->controller(TrustapController::class)->group(function () {
-        Route::middleware([JwtMiddleware::class, TrustapUser::class])->group(function(){
+Route::prefix('trustap')->name('trustap.')->group(function(){
+    Route::middleware([JwtMiddleware::class, TrustapUser::class])->group(function(){
+        Route::controller(TrustapController::class)->group(function () {
             Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
             Route::post('buyer-submit-complaint/{entityTrustapTransaction}', 'buyerSubmitComplaint')->name('buyer_submit_complaint');
             Route::post('buyer-confirms-handover/{entityTrustapTransaction}', 'buyerConfirmsHandover')->name('buyer_confirms_handover');
@@ -28,12 +27,16 @@ Route::prefix('trustap')
             Route::post('seller-claims-payout/{entityTrustapTransaction}', 'sellerClaimsPayout')->name('seller_claims_payout');
             Route::middleware(BrandRole::class)->group(function(){
                 Route::get('get-brand-transaction-lists', 'fetchBrandTransaction');
+                Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
             });
             Route::middleware(InfluencerRole::class)->group(function(){
+                Route::get('item-delivery-confirmation/{entityTrustapTransaction}', 'confirmDelivery');
                 Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
             });
         });
-        Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
+    });
+/*     Route::controller(TrustapAuthController::class)->group(function(){
+        Route::get('auth/redirect', 'redirectToTrustap');
+        // Route::get('auth/callback', 'handleProviderCallback');
+    }); */
 });
-
-Route::get('payment-success', [TrustapController::class, 'testResponse']);

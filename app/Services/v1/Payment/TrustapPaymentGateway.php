@@ -3,8 +3,11 @@
 namespace App\Services\v1\Payment;
 
 use App\Constants\Constants;
+use App\Enums\PaymentStatusEnum;
+use App\Exceptions\ForbiddenItemAccessException;
 use App\Models\EntityTrustapTransaction;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -37,11 +40,11 @@ class TrustapPaymentGateway
 
     public function createTransaction(array $data, $gig)
     {
-        if (auth()->user()->isInfluencer()) {
+        if (Auth::user()->isInfluencer()) {
             throw new TransactionFailedException('Influencer cannot create transactions.');
         }
 
-        $buyerId = auth()->user()->userTrustapMetadata->trustap_user_id;
+        $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;
         $sellerId = $gig->user?->userTrustapMetadata?->trustapGuestUserId;
         
         if (! $buyerId || ! $sellerId) {
@@ -54,19 +57,19 @@ class TrustapPaymentGateway
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => $sellerId,
+                'Trustap-User' => $buyerId,
             ])
             ->post(config('services.trustap.url').'/p2p/me/transactions/create_with_guest_user', [
                 'seller_id' => $sellerId,
                 'buyer_id' => $buyerId,
-                'creator_role' => $data['role'],
+                // 'creator_role' => $data['role'],
+                'creator_role' => 'buyer',
                 'currency' => $currency_code,
                 'description' => $data['description'],
                 'deposit_price' => (int) $gigPricing->pivot->price,
                 'deposit_charge' => $this->getTrustapFee($gigPricing->pivot->price, $currency_code)['charge'],
                 'charge_calculator_version' => 3,
-                'skip_remainder' => true,
-                'duration' => $data['duration']
+                'skip_remainder' => true
             ]);
 
         $response = $response->json();
@@ -74,7 +77,7 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, 'Failed to create transaction.');
             throw new Exception('Failed to create transaction: '.$response['error']);
         }
-        Log::debug('createTransaction : ',$response);
+        // Log::debug('createTransaction : ',$response);
         
         $transaction = EntityTrustapTransaction::create([
             'gig_id' => $gig->id,
@@ -84,7 +87,8 @@ class TrustapPaymentGateway
             'transactionType' => 'f2f', // or set as needed
             'sellerId' => $response['seller_id'],
             'buyerId' => $response['buyer_id'],
-            'status' => $response['status'],
+            // 'status' => $response['status'],
+            'status' => PaymentStatusEnum::TXN_INIT->value,
             'price' => (int) $response['deposit_pricing']['price'],
             'charge' => (int) $response['deposit_pricing']['charge'],
             'chargeSeller' => (int) $response['deposit_pricing']['charge_seller'],
@@ -97,33 +101,22 @@ class TrustapPaymentGateway
 
     public function paymentSuccess(array $data)
     {
-        // Step 1: Get the transaction ID using the join
-        $transaction_joined_query = EntityTrustapTransaction::select('entity_trustap_transactions.id as et_transaction_id', 'user_id')
-                            ->join(
-                                'user_trustap_metadata',
-                                'user_trustap_metadata.trustapGuestUserId',
-                                '=',
-                                'entity_trustap_transactions.buyerId'
-                            )
-                            ->where('transactionId', $data['tx_id'])
-                            ->firstOrFail();
-            // ->value('entity_trustap_transactions.id'); // Only get the ID
-            // dd($transaction);
-        // Step 2: Load the Eloquent model
-        // Step 3: Use the Eloquent model as needed
-        $data['user_id'] = $transaction_joined_query->user_id;
-        
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
         }
-        
+
         logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
-        return EntityTrustapTransaction::findOrFail($transaction_joined_query->et_transaction_id)
-                ->update([
-                    'status' => $data['code'],
-                ]);
+        $transaction = EntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
+        if ($transaction->status == PaymentStatusEnum::AMOUNT_PAID->value) {
+            throw new PaymentFailedException('Item has already been paid.');
+        }
+
+        return $transaction->update([
+            'status' => PaymentStatusEnum::AMOUNT_PAID->value,
+        ]);
     }
+
 
     // public function transferFundsByCards()
     // {
@@ -164,13 +157,15 @@ class TrustapPaymentGateway
     //     dd($data);
     // }
 
-    public function sellerAcceptDeposit($entityTrustapTransaction)
+    public function sellerAcceptDeposit(EntityTrustapTransaction $entityTrustapTransaction)
     {
-        if (auth()->user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to accept this deposit.');
+        }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
+            throw new PaymentFailedException('item has already been deposited.');
         }
 
-        $sellerId = auth()->user()->userTrustapMetadata->trustapGuestUserId;
+        $sellerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
 
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
@@ -190,18 +185,20 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $response, 'Seller Accept Deposit Successfully.');
 
         return $entityTrustapTransaction->update([
-            'status' => $response['status'],
+            'status' => PaymentStatusEnum::DEPOSIT_ACCEPTED->value,
         ]);
 
     }
 
     public function buyerConfirmsHandover(EntityTrustapTransaction $entityTrustapTransaction)
     {
-        if (auth()->user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to confirm the handover.');
+        }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::HANDOVERED->value) {
+            throw new PaymentFailedException('item is already handovered.');
         }
 
-        $buyerId = auth()->user()->userTrustapMetadata->trustap_user_id;
+        $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
@@ -219,18 +216,21 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
         return $entityTrustapTransaction->update([
-            'status' => $response['status'],
+            'status' => PaymentStatusEnum::HANDOVERED->value,
         ]);
 
     }
 
-    public function buyerSubmitComplaint($entityTrustapTransaction, $complaint)
+    public function buyerSubmitComplaint(EntityTrustapTransaction $entityTrustapTransaction, $complaint)
     {
-        if (auth()->user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to submit complaint on this transaction.');
         }
+        elseif ($entityTrustapTransaction->complaintPeriodDeadline && $entityTrustapTransaction->complaintPeriodDeadline->lt(now())) {
+            throw new PaymentFailedException('Complaint period has already been expired.');            
+        }
 
-        $buyerId = auth()->user()->userTrustapMetadata->trustapGuestUserId;
+        $buyerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
 
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
@@ -244,7 +244,6 @@ class TrustapPaymentGateway
         $data = $response->json();
 
         if (isset($data['error'])) {
-            dd($data);
             logError(__METHOD__, func_get_args(), $data, 'Failed to submit complaint.');
             throw new PaymentFailedException('Failed to submit complaint.');
         }
@@ -252,18 +251,18 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $data, 'Complaint submitted successfully');
 
         return $entityTrustapTransaction->update([
-            'status' => $data['status'] ?? $entityTrustapTransaction->status,
+            'status' => PaymentStatusEnum::COMPLAINED->value ?? $entityTrustapTransaction->status,
         ]);
     }
 
     public function sellerClaimsPayout($entityTrustapTransaction)
     {
-        if (auth()->user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to claim this transaction.');
         }
 
-        $sellerId = auth()->user()->userTrustapMetadata->trustapFullUserId;
-        $trustapUserType = auth()->user()->userTrustapMetadata->trustap_user_type;
+        $sellerId = Auth::user()->userTrustapMetadata->trustapFullUserId;
+        $trustapUserType = Auth::user()->userTrustapMetadata->trustap_user_type;
 
         if ($trustapUserType !== Constants::TRUSTAP_FULL_USER) {
             throw new PaymentFailedException('Only full Trustap users can claim payouts.');
@@ -286,7 +285,7 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $data, 'Seller claims payout.');
 
         return $entityTrustapTransaction->update([
-            'status' => $data['status'],
+            'status' => PaymentStatusEnum::AMOUNT_CLAIMED->value,
         ]);
     }
 }

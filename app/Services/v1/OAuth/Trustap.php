@@ -4,6 +4,7 @@ namespace App\Services\v1\OAuth;
 
 use App\Models\User;
 use App\Models\UserTrustapMetadata;
+use App\Services\v1\Payment\PaymentFailedException;
 use App\Services\v1\Payment\TrustAppException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -53,6 +54,10 @@ class Trustap
             'redirect_uri' => 'http://localhost:8000/trustap/auth/callback',
         ]);
 
+        if ($response->failed()) {
+            Log::debug('createFullUser: ', $response->json());
+            throw new PaymentFailedException('Error while creating full user');
+        }
         return $response->json();
     }
 
@@ -68,7 +73,9 @@ class Trustap
         ];
 
         // $user = $this->findOrCreateUser($socialUser);
-
+        if (empty($tokenData['trustapUserId']) || empty($tokenData['email'])) {
+            throw new PaymentFailedException('user must be logged in to proceed.');
+        }
         UserTrustapMetadata::where('user_id', auth()->id())
             ->update([
                 'trustapFullUserId' => $tokenData['trustapUserId'],

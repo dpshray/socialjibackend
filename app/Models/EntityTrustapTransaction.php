@@ -6,7 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class EntityTrustapTransaction extends Model
 {
+    
     protected $guarded = [];
+    
+    protected function casts(): array
+    {
+        return [
+            'complaintPeriodDeadline' => 'datetime'
+        ];
+    }
 
     public function gig(){
         return $this->belongsTo(Gig::class);
@@ -17,12 +25,23 @@ class EntityTrustapTransaction extends Model
     }
     
     public function buyer(){
-        return $this->hasManyThrough(
+        return $this->hasOneThrough(
             User::class,                    
             UserTrustapMetadata::class,     
             'trustapGuestUserId',           
             'id',                           
             'buyerId',                      
+            'user_id'                       
+        );
+    }    
+    
+    public function seller(){
+        return $this->hasOneThrough(
+            User::class,                    
+            UserTrustapMetadata::class,     
+            'trustapGuestUserId',           
+            'id',                           
+            'sellerId',                      
             'user_id'                       
         );
     }

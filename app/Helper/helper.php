@@ -56,15 +56,8 @@ if (! function_exists('logError')) {
             'response_payload' => $responsePayload,
         ]);
 
-        $user_id = null;# user_id cannot be null but from former coder...
-        if (auth()->check()) {
-            $user_id = auth()->id();
-        } elseif (array_key_exists('user_id', $responsePayload)) {
-            $user_id = $responsePayload['user_id'];
-        }
-
         Logging::create([
-            'user_id' => $user_id,
+            'user_id' => auth()->check() ? auth()->id() : null,
             'level' => 'error',
             'message' => $message,
             'request_payload' => json_encode($requestPayload),
@@ -81,14 +74,9 @@ if (! function_exists('logInfo')) {
             'request_payload' => $requestPayload,
             'response_payload' => $responsePayload,
         ]);
-        $user_id = null;# user_id cannot be null but from former coder...
-        if (auth()->check()) {
-            $user_id = auth()->id();
-        }elseif (array_key_exists('user_id',$responsePayload)) {
-            $user_id = $responsePayload['user_id'];
-        }
+
         Logging::create([
-            'user_id' => $user_id,
+            'user_id' => auth()->check() ? auth()->id() : null,
             'level' => 'info',
             'message' => $message,
             'request_payload' => json_encode($requestPayload),

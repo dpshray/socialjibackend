@@ -10,6 +10,7 @@ use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 /**
@@ -24,11 +25,17 @@ class TrustapAuthController extends Controller
 
     public function redirectToTrustap()
     {
-        return redirect($this->trustap->getAuthUrl());
+        if (Auth::user()->userTrustapMetadata->trustapFullUserId) {
+            return $this->apiError('full user already exists');
+        }
+        $url = $this->trustap->getAuthUrl();
+        // dd($url);
+        return redirect($url);
     }
 
     public function handleProviderCallback(Request $request)
     {
+        // dd(auth()->id());
         try {
             $this->trustap->getUser($request['code']);
 

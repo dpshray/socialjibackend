@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\v1;
 
+use App\Enums\PaymentStatusEnum;
+use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Payment\BrandGigPaymentResource;
 use App\Http\Resources\Payment\BrandPaymentResource;
@@ -40,9 +42,9 @@ class TrustapController extends Controller
                 // 'amount' => ['required', 'numeric'],
                 // 'currency' => ['required', 'string'],
                 'pricing_tier' => ['required', Rule::exists('pricing_tiers', 'id')],
-                'role' => ['required', 'string', 'in:buyer,seller'],
+                // 'role' => ['required', 'string', 'in:buyer,seller'],
                 'description' => ['required', 'string', 'max:255'],
-                'duration' => ['required','integer']
+                // 'duration' => ['required','integer']
             ]);
 
             $redirectUrl = null;
@@ -72,7 +74,7 @@ class TrustapController extends Controller
         } catch (PaymentFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
-            Log::error('An error occurred during payment callback: '.$e->getMessage());
+            Log::error('An error occurred during payment callback: ' . $e->getMessage());
             return $this->apiError('An error occurred during payment processing.');
         }
     }
@@ -112,7 +114,6 @@ class TrustapController extends Controller
             $response = $this->trustapPaymentGateway->buyerSubmitComplaint($entityTrustapTransaction, $validated['complaint']);
             return $this->apiSuccess('Complaint submitted successfully.');
         } catch (PaymentFailedException $e) {
-            dd($e->getMessage());
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
             Log::error('Buyer Submit Complaint: '.$e->getMessage());
@@ -161,7 +162,21 @@ class TrustapController extends Controller
         return $this->apiSuccess('user(influencer) transactions ', $transactions);
     }
 
-    function testResponse(){
-        return $this->apiSuccess('payment has been completed');
+    public function confirmDelivery(EntityTrustapTransaction $entityTrustapTransaction){
+        $this->isOwner($entityTrustapTransaction);
+        if (!empty($entityTrustapTransaction->complaintPeriodDeadline)) {
+            return $this->apiError('item has already been delivered',409);
+        }
+        $entityTrustapTransaction->update([
+            'status' => PaymentStatusEnum::DELIVERED->value,
+            'complaintPeriodDeadline' => now()->addDays(2)
+        ]);
+        return $this->apiSuccess('item status changed to : delivered');
+    }
+
+    public function isOwner(EntityTrustapTransaction $entityTrustapTransaction){
+        if ($entityTrustapTransaction->seller->isNot(Auth::user())) {
+            throw new ForbiddenItemAccessException();
+        }
     }
 }
