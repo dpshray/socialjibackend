@@ -18,20 +18,24 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class/* , BrandRole::class
 });
 
 Route::prefix('trustap')->name('trustap.')->group(function(){
-    Route::middleware([JwtMiddleware::class, TrustapUser::class])->group(function(){
-        Route::controller(TrustapController::class)->group(function () {
-            Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
-            Route::post('buyer-submit-complaint/{entityTrustapTransaction}', 'buyerSubmitComplaint')->name('buyer_submit_complaint');
-            Route::post('buyer-confirms-handover/{entityTrustapTransaction}', 'buyerConfirmsHandover')->name('buyer_confirms_handover');
-            Route::post('seller-accept-deposit/{entityTrustapTransaction}', 'sellerAcceptDeposit')->name('seller_accept_deposit');
-            Route::post('seller-claims-payout/{entityTrustapTransaction}', 'sellerClaimsPayout')->name('seller_claims_payout');
-            Route::middleware(BrandRole::class)->group(function(){
-                Route::get('get-brand-transaction-lists', 'fetchBrandTransaction');
-                Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
-            });
-            Route::middleware(InfluencerRole::class)->group(function(){
-                Route::get('item-delivery-confirmation/{entityTrustapTransaction}', 'confirmDelivery');
-                Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
+    Route::middleware([JwtMiddleware::class])->group(function(){
+        Route::get('get-country-codes', [TrustapController::class, 'trustapCountryCodes']);
+        Route::middleware([TrustapUser::class])->group(function(){
+            Route::controller(TrustapController::class)->group(function () {
+                Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
+                Route::post('buyer-submit-complaint/{entityTrustapTransaction}', 'buyerSubmitComplaint')->name('buyer_submit_complaint');
+                Route::post('buyer-confirms-handover/{entityTrustapTransaction}', 'buyerConfirmsHandover')->name('buyer_confirms_handover');
+                Route::post('seller-accept-deposit/{entityTrustapTransaction}', 'sellerAcceptDeposit')->name('seller_accept_deposit');
+                Route::post('seller-claims-payout/{entityTrustapTransaction}', 'sellerClaimsPayout')->name('seller_claims_payout');
+                Route::middleware(BrandRole::class)->group(function () {
+                    Route::get('get-brand-transaction-lists', 'fetchBrandTransaction');
+                    Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
+                    Route::post('buyer-confirm-delivery/{entityTrustapTransaction}', 'buyerReceivedConfirmation');
+                });
+                Route::middleware(InfluencerRole::class)->group(function () {
+                    Route::get('item-delivery-confirmation/{entityTrustapTransaction}', 'confirmDelivery');
+                    Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
+                });
             });
         });
     });

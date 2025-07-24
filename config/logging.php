@@ -52,6 +52,12 @@ return [
 
     'channels' => [
 
+        'payment' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment.log'),
+            'level' => 'error',
+            'days' => 30
+        ],
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', env('LOG_STACK', 'single')),

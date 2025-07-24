@@ -23,7 +23,7 @@ class UserTrustapMetadata extends Model
 
     public function getTrustapUserIdAttribute()
     {
-        return $this->trustapFullUserId ?? $this->trustapGuestUserId;
+        return !empty($this->trustapFullUserId) ? $this->trustapFullUserId : $this->trustapGuestUserId;
     }
 
     public function getTrustapUserTypeAttribute()

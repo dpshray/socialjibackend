@@ -8,6 +8,7 @@ use App\Exceptions\ForbiddenItemAccessException;
 use App\Models\EntityTrustapTransaction;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -20,6 +21,20 @@ class TrustapPaymentGateway
     private string $transactionId;
 
     public function __construct() {}
+
+    public function fetchSupportedCountryCodes(){
+        try {
+            // throw new \Exception('A TEST EXCEPTION');
+            return Cache::remember('payment_country_codes', 3600, function () {
+                return Http::withBasicAuth(config('services.trustap.api_key'), '')
+                    ->get('https://dev.stage.trustap.com/api/v1/client/supported_registration_countries')
+                    ->json();
+            });
+        } catch (\Exception $e) {
+            logError(__METHOD__, func_get_args(), $e->getMessage(), 'Error while fetching country codes.');
+            throw new TrustAppException("Error while fetching country codes.");    
+        }
+    }
 
     public function getTrustapFee(int $price, string $currency)
     {
@@ -180,7 +195,7 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, $response['error']);
             throw new PaymentFailedException('Failed to accept deposit: ');
         }
-        Log::debug('sellerAcceptDeposit : ', $response);
+        // Log::debug('sellerAcceptDeposit : ', $response);
 
         logInfo(__METHOD__, func_get_args(), $response, 'Seller Accept Deposit Successfully.');
 
@@ -212,7 +227,7 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, $response['error']);
             throw new PaymentFailedException('Failed to confirm handover.');
         }
-        Log::debug('buyerConfirmsHandover : ', $response);
+        // Log::debug('buyerConfirmsHandover : ', $response);
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
         return $entityTrustapTransaction->update([

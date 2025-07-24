@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use App\Exceptions\NotOwnerException;
+use App\Services\v1\OAuth\Trustap;
+use App\Services\v1\Payment\TrustAppException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
@@ -55,6 +57,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ForbiddenItemAccessException $e, Request $request) use($responder) {
             if ($request->expectsJson()) {
                 return $responder->apiError($e->getMessage() ?? 'Forbidden', 403);
+            }
+        });
+        $exceptions->render(function (TrustAppException $e, Request $request) use($responder) {
+            if ($request->expectsJson()) {
+                return $responder->apiError($e->getMessage() ?? 'Payment Error', 500);
             }
         });
 

@@ -13,6 +13,7 @@ use App\Models\Gig;
 use App\Services\v1\Payment\PaymentFailedException;
 use App\Services\v1\Payment\TransactionFailedException;
 use App\Services\v1\Payment\TrustapPaymentGateway;
+use App\Services\v1\Payment\TrustAppException;
 use App\Traits\PaginationTrait;
 use Dom\Entity;
 use Illuminate\Http\Request;
@@ -31,6 +32,11 @@ class TrustapController extends Controller
     public function __construct(TrustapPaymentGateway $trustapPaymentGateway)
     {
         $this->trustapPaymentGateway = $trustapPaymentGateway;
+    }
+
+    public function trustapCountryCodes(){
+        $CCs = $this->trustapPaymentGateway->fetchSupportedCountryCodes();
+        return $this->apiSuccess('supported country codes', $CCs);
     }
 
     public function createTransaction(Request $request, Gig $gig)
@@ -169,9 +175,17 @@ class TrustapController extends Controller
         }
         $entityTrustapTransaction->update([
             'status' => PaymentStatusEnum::DELIVERED->value,
-            'complaintPeriodDeadline' => now()->addDays(2)
+            'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
         ]);
         return $this->apiSuccess('item status changed to : delivered');
+    }
+
+    public function buyerReceivedConfirmation(Request $request, EntityTrustapTransaction $entityTrustapTransaction){
+        try {
+            $response = $this->trustapPaymentGateway->confirmPurchaseArrival($entityTrustapTransaction);
+        } catch (PaymentFailedException $e) {
+            return $this->apiError($e->getMessage());
+        }
     }
 
     public function isOwner(EntityTrustapTransaction $entityTrustapTransaction){
