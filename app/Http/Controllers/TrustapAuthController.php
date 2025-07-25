@@ -29,8 +29,9 @@ class TrustapAuthController extends Controller
             return $this->apiError('full user already exists');
         }
         $url = $this->trustap->getAuthUrl();
+        return $this->apiSuccess('redirect url', ['url' => $url]);
         // dd($url);
-        return redirect($url);
+        // return redirect($url);
     }
 
     public function handleProviderCallback(Request $request)
@@ -38,11 +39,10 @@ class TrustapAuthController extends Controller
         // dd(auth()->id());
         try {
             $this->trustap->getUser($request['code']);
-
             // $token = JWTAuth::fromUser($user);
-
-            // return $this->respondSuccess(['token' => $token], 'User registered successfully.', 201);
-            return $this->apiSuccess('User registered successfully.');
+            // return redirect(config('services.trustap.full_user_success_redirection_url'));
+            return redirect('https://demo.stage.dworklabs.com/');
+            // return $this->apiSuccess('User registered successfully.');
         } catch (DuplicateEmailException $e) {
             return $this->apiSuccess('Email Already Exists');
         }
