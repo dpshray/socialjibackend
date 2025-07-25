@@ -36,6 +36,8 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                     Route::get('item-delivery-confirmation/{entityTrustapTransaction}', 'confirmDelivery');
                     Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
                 });
+                Route::get('auth/redirect', [TrustapAuthController::class, 'redirectToTrustap'])->name('trustap.auth.redirect');
+                Route::get('auth/callback', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
             });
         });
     });
