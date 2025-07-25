@@ -13,7 +13,7 @@ trait ResponseTrait
         ], $statusCode);
     }
 
-    public function apiError(string $message = 'An error occurred', int $statusCode = 422, $errors = null)
+    public function apiError(string $message = 'An error occurred', int|null $statusCode = 422, $errors = null)
     {
         return response()->json([
             'message' => $message,
