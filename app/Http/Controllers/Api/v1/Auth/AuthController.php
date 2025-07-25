@@ -29,7 +29,7 @@ class AuthController extends Controller
             return $this->apiError('Invalid Credentials');
         }
         $user = auth()->user();
-        $user->loadMissing(['media']);
+        $user->loadMissing(['media','userTrustapMetadata']);
         $role = $user->getRoleNames()->first();
         event(new Registered($user));
         $user = new UserResource($user);

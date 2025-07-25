@@ -7,6 +7,7 @@ use App\Http\Resources\Gig\GigResource;
 use App\Http\Resources\Social\SocialProfileResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use PHPUnit\TextUI\Configuration\Constant;
 
 class UserResource extends JsonResource
 {
@@ -43,7 +44,10 @@ class UserResource extends JsonResource
                     'gigs_sold_count' => rand(100,1000),
                     'top_selling_gig' => new GigResource($this->gigs->first()),
                 ];
-            })
+            }),
+            'is_full_user' => $this->whenLoaded('userTrustapMetadata', function(){
+                return ($this->userTrustapMetadata->trustapUserType == Constants::TRUSTAP_FULL_USER) ? 1 : 0;
+            }) 
         ];
     }
 }
