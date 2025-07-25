@@ -50,6 +50,8 @@ return [
         'payment_callback_uri' => env('TRUSTAP_PAYMENT_CALLBACK_URI'),
         'sso_url' => env('TRUSTAP_SSO_URL'),
         'auth_redirect_url' => env('TRUSTAP_AUTH_REDIRECT_URI'),
+        #redirection
+        'full_user_success_redirection_url' => env('FULL_USER_SUCCESS_REDIRECTION_URL')
     ],
 
     'frontend' => [

@@ -9,6 +9,7 @@ use App\Models\EntityTrustapTransaction;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -27,7 +28,7 @@ class TrustapPaymentGateway
             // throw new \Exception('A TEST EXCEPTION');
             return Cache::remember('payment_country_codes', 3600, function () {
                 return Http::withBasicAuth(config('services.trustap.api_key'), '')
-                    ->get('https://dev.stage.trustap.com/api/v1/client/supported_registration_countries')
+                    ->get(config('services.trustap.url').'client/supported_registration_countries')
                     ->json();
             });
         } catch (\Exception $e) {
@@ -110,12 +111,12 @@ class TrustapPaymentGateway
             'currency' => $response['currency'],
             'description' => $response['description'],
         ]);
-
-        return config('services.trustap.payment_action')."/f2f/transactions/$transaction->transactionId/pay_deposit?redirect_uri=".config('services.trustap.payment_callback_uri');
+        return config('services.trustap.payment_action')."/f2f/transactions/$transaction->transactionId/pay_deposit?redirect_uri=". config('services.trustap.payment_callback_uri');
     }
 
     public function paymentSuccess(array $data)
     {
+
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');

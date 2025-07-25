@@ -51,9 +51,9 @@ class Trustap
             'client_secret' => $this->clientSecret,
             'grant_type' => 'authorization_code',
             'code' => $code,
-            'redirect_uri' => 'http://localhost:8000/trustap/auth/callback',
+            // 'redirect_uri' => 'http://localhost:8000/trustap/auth/callback',
+            'redirect_uri' => config('services.trustap.auth_redirect_url'),
         ]);
-
         if ($response->failed()) {
             Log::debug('createFullUser: ', $response->json());
             throw new PaymentFailedException('Error while creating full user');
@@ -63,6 +63,7 @@ class Trustap
 
     public function getUser($code)
     {
+        // dd($code);
         $response = $this->getAccessToken($code);
         $tokenData = $this->getTrustapUserId($response['id_token']);
 
@@ -71,7 +72,7 @@ class Trustap
             'email' => $tokenData['email'],
             'provider' => 'trustap',
         ];
-
+        // dd($tokenData);
         // $user = $this->findOrCreateUser($socialUser);
         if (empty($tokenData['trustapUserId']) || empty($tokenData['email'])) {
             throw new PaymentFailedException('user must be logged in to proceed.');
