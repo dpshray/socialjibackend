@@ -15,6 +15,7 @@ use App\Http\Middleware\InfluencerRole;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\VerifyEmail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
@@ -49,5 +50,27 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
     Route::middleware([AdminRole::class])->prefix('admin')->group(function(){
         Route::apiResource('currency', CurrencyController::class);
     });
+});
+
+Route::get('all-log-files', function () {
+    $files = File::files(storage_path('logs'));
+    echo "<ul>";
+    foreach ($files as $file) {
+        echo "<li>" . $file->getFilename() . "</li>"; // Show log file name like laravel-2025-07-24.log
+    }
+    echo "</ul>";
+});
+
+Route::get('view-log-files/{date}', function ($date = null) {
+    if (empty($date)) {
+        return 'date is required';
+    }
+    $date = $date ?? now()->format('Y-m-d'); // Default to today
+    $logPath = storage_path("logs/laravel-{$date}.log");
+    if (!File::exists($logPath)) {
+        abort(404, 'Log file not found');
+    }
+    $logs = File::get($logPath); // Get the whole log content
+    return response()->view('logs-view', ['logs' => $logs]);
 });
 // Route::get('/trustap/payment/callback', [PaymentController::class, 'paymentCallback'])->name('trustap.payment.callback');
