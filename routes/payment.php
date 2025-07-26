@@ -37,10 +37,10 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                     Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
                 });
                 Route::get('auth/redirect', [TrustapAuthController::class, 'redirectToTrustap'])->name('trustap.auth.redirect');
-                Route::get('auth/callback', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
             });
         });
     });
+    Route::get('auth/callback/{key?}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
 /*     Route::controller(TrustapAuthController::class)->group(function(){
         Route::get('auth/redirect', 'redirectToTrustap');
         // Route::get('auth/callback', 'handleProviderCallback');

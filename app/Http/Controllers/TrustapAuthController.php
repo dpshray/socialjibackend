@@ -36,9 +36,8 @@ class TrustapAuthController extends Controller
 
     public function handleProviderCallback(Request $request)
     {
-        // dd(auth()->id());
         try {
-            $this->trustap->getUser($request['code']);
+            $this->trustap->getUser($request['code'], $request['key']);
             // $token = JWTAuth::fromUser($user);
             // return redirect(config('services.trustap.full_user_success_redirection_url'));
             return redirect('https://demo.stage.dworklabs.com/');

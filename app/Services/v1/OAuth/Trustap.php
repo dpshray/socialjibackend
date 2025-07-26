@@ -7,6 +7,7 @@ use App\Models\UserTrustapMetadata;
 use App\Services\v1\Payment\PaymentFailedException;
 use App\Services\v1\Payment\TrustAppException;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -33,9 +34,13 @@ class Trustap
 
     public function getAuthUrl()
     {
+        $user_id = auth()->id();
+        $decrypted = Crypt::encrypt($user_id);
+        $redirect_url = $this->redirectUri.'/'.$decrypted;
+        // dd($redirect_url);
         $query = [
             'client_id' => $this->clientId,
-            'redirect_uri' => $this->redirectUri,
+            'redirect_uri' =>  $redirect_url,
             'response_type' => 'code',
             'scope' => 'openid p2p_tx:offline_create_join p2p_tx:offline_accept_deposit p2p_tx:offline_cancel p2p_tx:offline_confirm_handover p2p_tx:offline_claim',
             'state' => $this->state,
@@ -44,15 +49,17 @@ class Trustap
         return $this->ssoUrl.'/auth?'.http_build_query($query);
     }
 
-    public function getAccessToken($code)
+    public function getAccessToken($code, $key)
     {
+        $redirect_url = $this->redirectUri.'/'.$key;
+
         $response = Http::asForm()->post($this->ssoUrl.'/token', [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'grant_type' => 'authorization_code',
             'code' => $code,
             // 'redirect_uri' => 'http://localhost:8000/trustap/auth/callback',
-            'redirect_uri' => config('services.trustap.auth_redirect_url'),
+            'redirect_uri' => $redirect_url
         ]);
         if ($response->failed()) {
             Log::debug('createFullUser: ', $response->json());
@@ -61,12 +68,12 @@ class Trustap
         return $response->json();
     }
 
-    public function getUser($code)
+    public function getUser($code, $key)
     {
         // dd($code);
-        $response = $this->getAccessToken($code);
+        $user_id = Crypt::decrypt($key);
+        $response = $this->getAccessToken($code, $key);
         $tokenData = $this->getTrustapUserId($response['id_token']);
-
         $socialUser = [
             'provider_id' => $tokenData['trustapUserId'],
             'email' => $tokenData['email'],
@@ -77,7 +84,7 @@ class Trustap
         if (empty($tokenData['trustapUserId']) || empty($tokenData['email'])) {
             throw new PaymentFailedException('user must be logged in to proceed.');
         }
-        UserTrustapMetadata::where('user_id', auth()->id())
+        UserTrustapMetadata::where('user_id', $user_id)
             ->update([
                 'trustapFullUserId' => $tokenData['trustapUserId'],
                 'trustapFullUserEmail' => $tokenData['email'],
