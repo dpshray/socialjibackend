@@ -58,8 +58,9 @@ class EntityTrustapTransaction extends Model
     }
 
     public function getComplaintAllowedAttribute(){
+        // return $this->delivered_at->addHours(24)->isPast();
         return $this->delivered_at && $this->complaintPeriodDeadline
             && $this->delivered_at->addHours(24)->isPast()
-            && $this->complaintPeriodDeadline->lte(now());
+            && $this->complaintPeriodDeadline->gte(now());
     }
 }
