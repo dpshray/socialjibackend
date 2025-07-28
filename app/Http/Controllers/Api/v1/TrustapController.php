@@ -68,15 +68,19 @@ class TrustapController extends Controller
         }
     }
 
-    public function paymentCallback(Request $request)
+    public function paymentCallback(Request $request, $transaction_id = null)
     {
         // dd($request->all());
         try {
-            $result = $this->trustapPaymentGateway->paymentSuccess($request->all());
+            $response = $request->all();
+            if (!array_key_exists('tx_id', $response)) {
+                $response['tx_id'] = $transaction_id;
+            }
+            $result = $this->trustapPaymentGateway->paymentSuccess($response);
             if (! $result) {
                 return $this->apiError('Payment processing failed.');
             }
-            return $this->apiSuccess('Payment processed successfully.');
+            return redirect()->away(config('services.trustap.full_user_success_redirection_url'));
         } catch (PaymentFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
@@ -124,7 +128,7 @@ class TrustapController extends Controller
         } catch (\Exception $e) {
             Log::error('Buyer Submit Complaint: '.$e->getMessage());
 
-            return $this->apiError('An error occurred while submitting the complaint: ');
+            return $this->apiError('An error occurred while submitting the complaint: '. $e->getMessage());
         }
     }
 

@@ -39,7 +39,7 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
             });
         });
     });
-    Route::get('payment/callback', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
+    Route::get('payment/callback/{key?}', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('auth/callback/{key?}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
 /*     Route::controller(TrustapAuthController::class)->group(function(){
         Route::get('auth/redirect', 'redirectToTrustap');

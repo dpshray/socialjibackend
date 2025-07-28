@@ -113,19 +113,17 @@ class TrustapPaymentGateway
             'currency' => $response['currency'],
             'description' => $response['description'],
         ]);
-        return config('services.trustap.payment_action')."/f2f/transactions/$transaction->transactionId/pay_deposit?redirect_uri=". config('services.trustap.payment_callback_uri');
+        return config('services.trustap.payment_action')."/f2f/transactions/$transaction->transactionId/pay_deposit?redirect_uri=". config('services.trustap.payment_callback_uri').'/'. $response['id'];
     }
 
     public function paymentSuccess(array $data)
     {
-
+        $transaction = EntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
+        $data['user_id'] = $transaction->buyer->id; 
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
         }
-        
-        $transaction = EntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
-        $data['user_id'] = $transaction->buyer->id; 
         logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
         if ($transaction->status == PaymentStatusEnum::AMOUNT_PAID->value) {
             throw new PaymentFailedException('Item has already been paid.');
@@ -235,6 +233,7 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
         return $entityTrustapTransaction->update([
+            'complaintPeriodDeadline' => $response['complaint_period_deadline'],
             'status' => PaymentStatusEnum::HANDOVERED->value,
         ]);
 
@@ -264,7 +263,7 @@ class TrustapPaymentGateway
 
         if (isset($data['error'])) {
             logError(__METHOD__, func_get_args(), $data, 'Failed to submit complaint.');
-            throw new PaymentFailedException('Failed to submit complaint.');
+            throw new PaymentFailedException($data['error']);
         }
 
         logInfo(__METHOD__, func_get_args(), $data, 'Complaint submitted successfully');
