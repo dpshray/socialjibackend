@@ -74,9 +74,14 @@ if (! function_exists('logInfo')) {
             'request_payload' => $requestPayload,
             'response_payload' => $responsePayload,
         ]);
-
+        $user_id = null;
+        if (auth()->check()) {
+            $user_id = auth()->id();
+        }else if (array_key_exists('user_id', $responsePayload)) {
+            $user_id = $responsePayload['user_id'];
+        }
         Logging::create([
-            'user_id' => auth()->check() ? auth()->id() : null,
+            'user_id' =>  $user_id,
             'level' => 'info',
             'message' => $message,
             'request_payload' => json_encode($requestPayload),
