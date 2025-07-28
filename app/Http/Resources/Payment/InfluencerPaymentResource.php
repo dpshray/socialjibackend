@@ -16,14 +16,15 @@ class InfluencerPaymentResource extends JsonResource
     {
         // return parent::toArray($request);
         return [
+            "id" => $this->id,
             "status" => $this->status,
             "price" => $this->price,
-            "charge" => $this->charge,
-            "chargeSeller" => $this->chargeSeller,
+            // "charge" => $this->charge,
+            // "chargeSeller" => $this->chargeSeller,
             "currency" => $this->currency,
-            "claimedBySeller" => $this->claimedBySeller,
-            "claimedByBuyer" => $this->claimedByBuyer,
-            "complaintPeriodDeadline" => $this->complaintPeriodDeadline,
+            // "claimedBySeller" => $this->claimedBySeller,
+            // "claimedByBuyer" => $this->claimedByBuyer,
+            "item_delivery_deadline" => $this->complaintPeriodDeadline,
             'gig' => $this->whenLoaded('gig', new BrandGigPaymentResource($this->gig)),
             'pricing_tier' => $this->whenLoaded('pricing'),
             'buyer' => $this->whenLoaded('buyer')
