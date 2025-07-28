@@ -29,7 +29,6 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                 Route::post('seller-claims-payout/{entityTrustapTransaction}', 'sellerClaimsPayout')->name('seller_claims_payout');
                 Route::middleware(BrandRole::class)->group(function () {
                     Route::get('get-brand-transaction-lists', 'fetchBrandTransaction');
-                    Route::get('payment/callback', 'paymentCallback')->name('payment.callback');
                     Route::post('buyer-confirm-delivery/{entityTrustapTransaction}', 'buyerReceivedConfirmation');
                 });
                 Route::middleware(InfluencerRole::class)->group(function () {
@@ -40,6 +39,7 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
             });
         });
     });
+    Route::get('payment/callback', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('auth/callback/{key?}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
 /*     Route::controller(TrustapAuthController::class)->group(function(){
         Route::get('auth/redirect', 'redirectToTrustap');
