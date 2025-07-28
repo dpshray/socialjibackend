@@ -143,23 +143,17 @@ class TrustapController extends Controller
     }
     
     public function fetchBrandTransaction(Request $request){
-        $per_page = $request->query('per_page');
+        $per_page = $request->query('per_page',10);
         $user_trustap_metadata = Auth::user()->userTrustapMetadata;
-        $user_type = $request->query('user_type');
-        if ($request->query('user_type') == 'guest_user') {
-            $user_trustap_metadata = $user_trustap_metadata->guestUserTransactions();
-        }else{
-            $user_type = 'full_user';
-            $user_trustap_metadata = $user_trustap_metadata->fullUserTransactions();
-        }
+        $user_trustap_metadata = $user_trustap_metadata->guestUserTransactions()->where('status','!=',PaymentStatusEnum::TXN_INIT);
         $pagination = $user_trustap_metadata->with(['gig:id,user_id,title' => ['user'],'pricing:id,name,label'])
                         ->paginate($per_page);
         $transactions = $this->setupPagination($pagination, fn($items) => BrandPaymentResource::collection($items))->data;       
-        return $this->apiSuccess('user(brand) transactions list('.$user_type.')', $transactions);
+        return $this->apiSuccess('user(brand) transactions list', $transactions);
     }
 
     public function fetchInfluencerTransaction(Request $request){
-        $per_page = $request->query('per_page');
+        $per_page = $request->query('per_page',10);
         $sellerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
         $pagination = EntityTrustapTransaction::where('sellerId', $sellerId)
                         ->with(['gig','buyer:users.id,first_name,middle_name,last_name,nick_name,email','pricing:id,name,label'])
@@ -175,6 +169,7 @@ class TrustapController extends Controller
         }
         $entityTrustapTransaction->update([
             'status' => PaymentStatusEnum::DELIVERED->value,
+            'delivered_at' => now(),
             'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
         ]);
         return $this->apiSuccess('item status changed to : delivered');
