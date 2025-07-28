@@ -80,7 +80,7 @@ class TrustapController extends Controller
             if (! $result) {
                 return $this->apiError('Payment processing failed.');
             }
-            return redirect()->away(config('services.trustap.full_user_success_redirection_url'));
+            return redirect()->away(config('services.trustap.payment_success_redirection_url_to_site'));
         } catch (PaymentFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {

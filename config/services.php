@@ -51,7 +51,8 @@ return [
         'sso_url' => env('TRUSTAP_SSO_URL'),
         'auth_redirect_url' => env('TRUSTAP_AUTH_REDIRECT_URI'),
         #redirection
-        'full_user_success_redirection_url' => env('FULL_USER_SUCCESS_REDIRECTION_URL')
+        'full_user_success_redirection_url_to_site' => env('FULL_USER_SUCCESS_REDIRECTION_URL'),
+        'payment_success_redirection_url_to_site' => env('PAYMENT_SUCCESS_REDIRECTION_URL')
     ],
 
     'frontend' => [

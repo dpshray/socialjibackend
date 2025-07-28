@@ -40,7 +40,7 @@ class TrustapAuthController extends Controller
             $this->trustap->getUser($request['code'], $request['key']);
             // $token = JWTAuth::fromUser($user);
             // return redirect(config('services.trustap.full_user_success_redirection_url'));
-            return redirect('https://demo.stage.dworklabs.com/');
+            return redirect(config('services.trustap.full_user_success_redirection_url_to_site'));
             // return $this->apiSuccess('User registered successfully.');
         } catch (DuplicateEmailException $e) {
             return $this->apiSuccess('Email Already Exists');
