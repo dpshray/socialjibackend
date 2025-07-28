@@ -30,13 +30,14 @@ class GigController extends Controller
     /**
      * for influencer
      */
-    public function index()
+    public function index(Request $request)
     {
+        $per_page = $request->query('per_page',10);
         $gigs = Gig::select('id','user_id','title','description')
                     ->with(['media','user' => ['media', 'brandReviews']])
                     ->creator()
                     ->latest()
-                    ->paginate();
+                    ->paginate($per_page);
         $gigs = $this->setupPagination($gigs, GigCollection::class)->data;
         return $this->apiSuccess('list of available gigs of user : '.$this->user->nick_name, $gigs);
     }
