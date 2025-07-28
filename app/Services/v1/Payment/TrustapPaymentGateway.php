@@ -69,6 +69,8 @@ class TrustapPaymentGateway
 
         $gigPricing = $gig->gig_pricing->where('id', $data['pricing_tier'])->first();
         $currency_code = strtolower($gigPricing->pivot->currency->code);
+        $item_amount = (int) $gigPricing->pivot->price;
+        $amount_in_cent = $item_amount * 100;
         // dd($currency_code);
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
@@ -82,8 +84,8 @@ class TrustapPaymentGateway
                 'creator_role' => 'buyer',
                 'currency' => $currency_code,
                 'description' => $data['description'],
-                'deposit_price' => (int) $gigPricing->pivot->price,
-                'deposit_charge' => $this->getTrustapFee($gigPricing->pivot->price, $currency_code)['charge'],
+                'deposit_price' => $amount_in_cent,
+                'deposit_charge' => $this->getTrustapFee($amount_in_cent, $currency_code)['charge'],
                 'charge_calculator_version' => 3,
                 'skip_remainder' => true
             ]);
@@ -105,8 +107,8 @@ class TrustapPaymentGateway
             'buyerId' => $response['buyer_id'],
             // 'status' => $response['status'],
             'status' => PaymentStatusEnum::TXN_INIT->value,
-            'price' => (int) $response['deposit_pricing']['price'],
-            'charge' => (int) $response['deposit_pricing']['charge'],
+            'price' => (int) $response['deposit_pricing']['price'] / 100,# converting back form cent
+            'charge' => (int) $response['deposit_pricing']['charge'] / 100,
             'chargeSeller' => (int) $response['deposit_pricing']['charge_seller'],
             'currency' => $response['currency'],
             'description' => $response['description'],
@@ -121,9 +123,10 @@ class TrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
         }
-
-        logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
+        
         $transaction = EntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
+        $data['user_id'] = $transaction->buyer->id; 
+        logInfo(__METHOD__, func_get_args(), $data, 'Payment Success.');
         if ($transaction->status == PaymentStatusEnum::AMOUNT_PAID->value) {
             throw new PaymentFailedException('Item has already been paid.');
         }
