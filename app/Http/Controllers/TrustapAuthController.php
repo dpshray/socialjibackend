@@ -49,13 +49,13 @@ class TrustapAuthController extends Controller
 
     public function createGuestUser(Request $request)
     {
+        $validated = $request->validate([
+            // 'email' => ['required', 'email'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'country_code' => ['required', 'string', 'size:2'],
+        ]);
         try {
-            $validated = $request->validate([
-                // 'email' => ['required', 'email'],
-                'first_name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
-                'country_code' => ['required', 'string', 'size:2'],
-            ]);
 
             // For testing purposes, remove this
             // $user = \App\Models\User::find(16);
