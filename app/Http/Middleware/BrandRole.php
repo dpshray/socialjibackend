@@ -19,7 +19,7 @@ class BrandRole
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->user() || ! auth()->user()->hasRole(Constants::ROLE_BRAND)) {
-            return $this->apiError('Forbidden', 401);
+            return $this->apiError('Only users with the brand role are allowed to make this request.', 401);
         }
 
         return $next($request);
