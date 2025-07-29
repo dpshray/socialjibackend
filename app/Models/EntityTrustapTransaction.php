@@ -15,7 +15,8 @@ class EntityTrustapTransaction extends Model
      * After this 24-hour deadline, we automatically trigger the handover API via a scheduled cron job.
      * Then, 24 hours after the handover is confirmed, Trustap automatically releases the funds to the seller.
      */
-    const COMPLAIN_PERIOD_DEADLINE = 1;#IN DAYS
+    const COMPLAIN_PERIOD_DEADLINE = 2;#IN DAYS
+    const COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY = 1;#IN DAY
     
     protected $guarded = [];
     
