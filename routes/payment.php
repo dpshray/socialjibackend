@@ -22,16 +22,16 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
         Route::get('get-country-codes', [TrustapController::class, 'trustapCountryCodes']);
         Route::middleware([TrustapUser::class])->group(function(){
             Route::controller(TrustapController::class)->group(function () {
-                Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
                 Route::post('buyer-submit-complaint/{entityTrustapTransaction}', 'buyerSubmitComplaint')->name('buyer_submit_complaint');
                 Route::post('buyer-confirms-handover/{entityTrustapTransaction}', 'buyerConfirmsHandover')->name('buyer_confirms_handover');
-                Route::post('seller-accept-deposit/{entityTrustapTransaction}', 'sellerAcceptDeposit')->name('seller_accept_deposit');
                 Route::post('seller-claims-payout/{entityTrustapTransaction}', 'sellerClaimsPayout')->name('seller_claims_payout');
                 Route::middleware(BrandRole::class)->group(function () {
+                    Route::post('create_transaction/{gig}', 'createTransaction')->name('create.transaction');
                     Route::get('get-brand-transaction-lists', 'fetchBrandTransaction');
                     Route::post('buyer-confirm-delivery/{entityTrustapTransaction}', 'buyerReceivedConfirmation');
                 });
                 Route::middleware(InfluencerRole::class)->group(function () {
+                    Route::post('seller-accept-deposit/{entityTrustapTransaction}', 'sellerAcceptDeposit')->name('seller_accept_deposit');
                     Route::get('item-delivery-confirmation/{entityTrustapTransaction}', 'confirmDelivery');
                     Route::get('get-influencer-transaction-lists', 'fetchInfluencerTransaction');
                 });
@@ -39,8 +39,8 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
             });
         });
     });
-    Route::get('payment/callback/{key?}', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
-    Route::get('auth/callback/{key?}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
+    Route::get('payment/callback/{key}', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
+    Route::get('auth/callback/{key}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
 /*     Route::controller(TrustapAuthController::class)->group(function(){
         Route::get('auth/redirect', 'redirectToTrustap');
         // Route::get('auth/callback', 'handleProviderCallback');

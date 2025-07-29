@@ -68,19 +68,15 @@ class TrustapController extends Controller
         }
     }
 
-    public function paymentCallback(Request $request, $transaction_id = null)
+    public function paymentCallback(Request $request, $transaction_id)
     {
-        // dd($request->all());
         try {
-            $response = $request->all();
-            if (!array_key_exists('tx_id', $response)) {
-                $response['tx_id'] = $transaction_id;
-            }
+            $response = $request->merge(['tx_id' => $transaction_id])->all();
             $result = $this->trustapPaymentGateway->paymentSuccess($response);
             if (! $result) {
                 return $this->apiError('Payment processing failed.');
             }
-            return redirect()->away(config('services.trustap.payment_success_redirection_url_to_site'));
+            return redirect(config('services.trustap.payment_success_redirection_url_to_site'));
         } catch (PaymentFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
@@ -168,8 +164,11 @@ class TrustapController extends Controller
 
     public function confirmDelivery(EntityTrustapTransaction $entityTrustapTransaction){
         $this->isOwner($entityTrustapTransaction);
-        if (!empty($entityTrustapTransaction->complaintPeriodDeadline)) {
+        /* if (!empty($entityTrustapTransaction->complaintPeriodDeadline)) {
             return $this->apiError('item has already been delivered',409);
+        } */
+        if ($entityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
+            return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
         }
         $entityTrustapTransaction->update([
             'status' => PaymentStatusEnum::DELIVERED->value,
@@ -177,14 +176,6 @@ class TrustapController extends Controller
             'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
         ]);
         return $this->apiSuccess('item status changed to : delivered');
-    }
-
-    public function buyerReceivedConfirmation(Request $request, EntityTrustapTransaction $entityTrustapTransaction){
-        try {
-            $response = $this->trustapPaymentGateway->confirmPurchaseArrival($entityTrustapTransaction);
-        } catch (PaymentFailedException $e) {
-            return $this->apiError($e->getMessage());
-        }
     }
 
     public function isOwner(EntityTrustapTransaction $entityTrustapTransaction){

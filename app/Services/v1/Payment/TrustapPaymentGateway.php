@@ -60,7 +60,7 @@ class TrustapPaymentGateway
             throw new TransactionFailedException('Influencer cannot create transactions.');
         }
 
-        $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;
+        $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;#guestUserId
         $sellerId = $gig->user?->userTrustapMetadata?->trustapGuestUserId;
         
         if (! $buyerId || ! $sellerId) {
@@ -176,18 +176,20 @@ class TrustapPaymentGateway
 
     public function sellerAcceptDeposit(EntityTrustapTransaction $entityTrustapTransaction)
     {
-        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
+        $user_trustap_meta_data = Auth::user()->userTrustapMetadata;
+        $seller_id = $user_trustap_meta_data->trustapGuestUserId; 
+        if ($seller_id != $entityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to accept this deposit.');
         }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
-            throw new PaymentFailedException('item has already been deposited.');
+            throw new PaymentFailedException('deposited has already been accepted.');
+        }elseif ($entityTrustapTransaction->status != PaymentStatusEnum::AMOUNT_PAID->value) {
+            throw new \Exception("could not change payment status(status can only be changed after amount has been paid)");
         }
-
-        $sellerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
 
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => $sellerId,
+                'Trustap-User' => $seller_id,
             ])
             ->post(config('services.trustap.url')."/p2p/transactions/$entityTrustapTransaction->transactionId/accept_deposit_with_guest_seller");
 
@@ -213,6 +215,8 @@ class TrustapPaymentGateway
             throw new PaymentFailedException('You are not authorized to confirm the handover.');
         }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::HANDOVERED->value) {
             throw new PaymentFailedException('item is already handovered.');
+        } elseif ($entityTrustapTransaction->status != PaymentStatusEnum::DELIVERED->value) {
+            throw new \Exception("could not change payment status(status can only be changed after amount has been delivered)");
         }
 
         $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;
@@ -233,7 +237,6 @@ class TrustapPaymentGateway
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
         return $entityTrustapTransaction->update([
-            'complaintPeriodDeadline' => $response['complaint_period_deadline'],
             'status' => PaymentStatusEnum::HANDOVERED->value,
         ]);
 
@@ -244,7 +247,17 @@ class TrustapPaymentGateway
         if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to submit complaint on this transaction.');
         }
-        elseif ($entityTrustapTransaction->complaintPeriodDeadline && $entityTrustapTransaction->complaintPeriodDeadline->lt(now())) {
+        elseif ($entityTrustapTransaction->status == PaymentStatusEnum::COMPLAINED->value) {
+            throw new \Exception("item has already been complained");
+        }
+        elseif ($entityTrustapTransaction->status != PaymentStatusEnum::HANDOVERED->value) {
+            throw new \Exception("complain can only be possible after item has been delivered");
+        }
+        elseif ($entityTrustapTransaction->delivered_at->lt(now())) {
+            $hour_to_wait = EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY * 24;
+            throw new \Exception('please wait for '. $hour_to_wait.' hour after delivery time to make a complain for this item');
+        }
+        elseif ($entityTrustapTransaction->delivered_at->gte(now())) {
             throw new PaymentFailedException('Complaint period has already been expired.');            
         }
 
@@ -273,10 +286,12 @@ class TrustapPaymentGateway
         ]);
     }
 
-    public function sellerClaimsPayout($entityTrustapTransaction)
+    public function sellerClaimsPayout(EntityTrustapTransaction $entityTrustapTransaction)
     {
         if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to claim this transaction.');
+        }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::AMOUNT_CLAIMED->value) {
+            throw new \Exception('amount has already been claimed');
         }
 
         $sellerId = Auth::user()->userTrustapMetadata->trustapFullUserId;
