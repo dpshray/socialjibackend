@@ -2,8 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\PaymentStatusEnum;
 use App\Models\EntityTrustapTransaction;
+use App\Services\v1\Payment\TrustapPaymentGateway;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TriggerTrustapHandover extends Command
@@ -27,14 +30,30 @@ class TriggerTrustapHandover extends Command
      */
     public function handle()
     {
-        info("Trustap Handover(Cron Job) running at " . now());
+        // info("Trustap Handover(Cron Job) running at " . now());
         $err_count = 0;
-        EntityTrustapTransaction::whereDate('complaintPeriodDeadline', now()->toDateString())
-            ->where('complaintPeriodDeadline', '<=', now())
-            ->chunk(100, function ($transactions) use($err_count) {
+        EntityTrustapTransaction::where('status', PaymentStatusEnum::DELIVERED->value)
+            ->where('delivered_at', '<=', now()->subDays(EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY))
+            ->chunk(100, function ($transactions) use ($err_count) {
                 foreach ($transactions as $transaction) {
                     try {
-                        $transaction->trustapPaymentGateway->buyerConfirmsHandover($transaction);
+                        $buyerId = $transaction->buyerId;
+                        $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
+                            ->withHeaders([
+                                'Content-Type' => 'application/json',
+                                'Trustap-User' => $buyerId,
+                            ])
+                            ->post(config('services.trustap.url') . "/p2p/transactions/$transaction->transactionId/confirm_handover_with_guest_user");
+                            if ($response->successful()) {
+                                $transaction->update([
+                                    'status' => PaymentStatusEnum::HANDOVERED->value,
+                                ]);
+                            } else {
+                                Log::channel('payment')->error('Failed to confirm handover', [
+                                    'transaction_id' => $transaction->id,
+                                    'error' => json_decode($response->body()),
+                                ]);                                
+                            }
                     } catch (\Exception $e) {
                         Log::channel('payment')->error('Failed to confirm handover', [
                             'transaction_id' => $transaction->id,
@@ -44,6 +63,6 @@ class TriggerTrustapHandover extends Command
                     }
                 }
             });
-        info("Trustap Handover(Cron Job) finished at " . now().' with '.$err_count.' errors');
+        // info("Trustap Handover(Cron Job) finished at " . now() . ' with ' . $err_count . ' errors');
     }
 }
