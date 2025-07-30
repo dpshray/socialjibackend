@@ -157,6 +157,7 @@ class TrustapController extends Controller
         $sellerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
         $pagination = EntityTrustapTransaction::where('sellerId', $sellerId)
                         ->with(['gig','buyer:users.id,first_name,middle_name,last_name,nick_name,email','pricing:id,name,label'])
+                        ->where('status', '!=', PaymentStatusEnum::TXN_INIT)
                         ->paginate($per_page);
         $transactions = $this->setupPagination($pagination, fn($items) => InfluencerPaymentResource::collection($items))->data;
         return $this->apiSuccess('user(influencer) transactions ', $transactions);
