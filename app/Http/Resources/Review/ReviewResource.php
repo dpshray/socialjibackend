@@ -23,12 +23,19 @@ class ReviewResource extends JsonResource
             'reviewed_at' => $this->updated_at->diffForHumans(),
             'helpfuls' => $this->whenLoaded('helpfuls', function(){
                 $upvote = $downvote = 0;
-                $this->helpfuls->each(function($i,$k) use(&$upvote, &$downvote){
-                    ($i->vote == 1) ? $upvote++ : $downvote++;
-                });
+                $upvote = $this->helpfuls->where('vote',1)->count();
+                $downvote = $this->helpfuls->where('vote',0)->count(); 
                 return compact('upvote','downvote');
             }),
-            'reviewer' => $this->whenLoaded('user', new UserResource($this->user))
+            'reviewer' => $this->whenLoaded('user', function(){
+                $reviewer = $this->user;
+                return [
+                    'first_name' => $reviewer->first_name,
+                    'middle_name' => $reviewer->middle_name,
+                    'last_name' => $reviewer->last_name,
+                    'nick_name' => $reviewer->nick_name
+                ];
+            })
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Review\ReviewRequest;
+use App\Http\Resources\Review\RevCollection;
 use App\Http\Resources\Review\ReviewCollection;
 use App\Http\Resources\Review\ReviewResource;
 use App\Models\Gig;
@@ -22,7 +23,6 @@ class GigReviewController extends Controller
         $validated = $request->validated();
         $validated['gig_id'] = $gig->id;
         $comment = Auth::user()->brandReviews()->create($validated);
-        $comment = new ReviewResource($comment);
         return $this->apiSuccess('gig reviewed successfully', $comment);
     }
 
@@ -31,7 +31,7 @@ class GigReviewController extends Controller
         $per_page = $request->query('per_page');
         $paginated_reviews = $gig->reviews()->with(['user.media', 'helpfuls'])->latest()->paginate($per_page);
         $reviews = $paginated_reviews->items();
-        $reviews = $this->setupPagination($paginated_reviews, ReviewCollection::class)->data;
+        $reviews = $this->setupPagination($paginated_reviews, fn($review) => ReviewResource::collection($review))->data;
         return $this->apiSuccess("gig title: {$gig->title} reviews", $reviews);
     }
 
