@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 
 class EntityTrustapTransaction extends Model
@@ -59,8 +60,8 @@ class EntityTrustapTransaction extends Model
     }
 
     public function getComplaintAllowedAttribute(){
-        // return $this->delivered_at->addHours(24)->isPast();
         return $this->delivered_at && $this->complaintPeriodDeadline
+            && $this->status == PaymentStatusEnum::HANDOVERED->value
             && $this->delivered_at->addHours(self::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY)->isPast()
             && $this->complaintPeriodDeadline->gte(now());
     }

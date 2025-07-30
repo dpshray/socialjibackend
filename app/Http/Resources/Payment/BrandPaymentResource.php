@@ -28,7 +28,7 @@ class BrandPaymentResource extends JsonResource
             "item_delivery_deadline" => $this->complaintPeriodDeadline,
             'gig' => $this->whenLoaded('gig', new BrandGigPaymentResource($this->gig)),
             'pricing_tier' => $this->whenLoaded('pricing'),
-        'complain_allowed' => $this->complaint_allowed
+            'complain_allowed' => $this->complaint_allowed
         ];
     }
 }

@@ -144,21 +144,37 @@ class TrustapController extends Controller
     
     public function fetchBrandTransaction(Request $request){
         $per_page = $request->query('per_page',10);
-        $user_trustap_metadata = Auth::user()->userTrustapMetadata;
-        $user_trustap_metadata = $user_trustap_metadata->guestUserTransactions()->where('status','!=',PaymentStatusEnum::TXN_INIT);
-        $pagination = $user_trustap_metadata->with(['gig:id,user_id,title' => ['user'],'pricing:id,name,label'])
-                        ->paginate($per_page);
+        $userTrustapMetadata = Auth::user()->userTrustapMetadata;
+        if (empty($userTrustapMetadata)) {
+            return $this->apiError('guest user(trustap) does not exists');
+        }
+        $pagination = $userTrustapMetadata->buyerTransactions()
+            ->where('status', '!=', PaymentStatusEnum::TXN_INIT)
+            ->with([
+                'gig.user',           
+                'gig:id,user_id,title', 
+                'pricing:id,name,label' 
+            ])
+            ->paginate($per_page);
         $transactions = $this->setupPagination($pagination, fn($items) => BrandPaymentResource::collection($items))->data;       
         return $this->apiSuccess('user(brand) transactions list', $transactions);
     }
 
     public function fetchInfluencerTransaction(Request $request){
         $per_page = $request->query('per_page',10);
-        $sellerId = Auth::user()->userTrustapMetadata->trustapGuestUserId;
-        $pagination = EntityTrustapTransaction::where('sellerId', $sellerId)
-                        ->with(['gig','buyer:users.id,first_name,middle_name,last_name,nick_name,email','pricing:id,name,label'])
-                        ->where('status', '!=', PaymentStatusEnum::TXN_INIT)
-                        ->paginate($per_page);
+        $userTrustapMetadata = Auth::user()->userTrustapMetadata;
+        if (empty($userTrustapMetadata)) {
+            return $this->apiError('guest user(trustap) does not exists');
+        }
+        $pagination = $userTrustapMetadata->sellerTransactions()
+            ->where('status', '!=', PaymentStatusEnum::TXN_INIT)
+            ->with([
+                'gig:id,user_id,title',
+                'buyer:users.id,first_name,middle_name,last_name,nick_name,email',
+                'pricing:id,name,label'
+            ])
+            ->paginate($per_page);
+
         $transactions = $this->setupPagination($pagination, fn($items) => InfluencerPaymentResource::collection($items))->data;
         return $this->apiSuccess('user(influencer) transactions ', $transactions);
     }
