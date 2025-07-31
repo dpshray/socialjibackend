@@ -5,12 +5,30 @@ use App\Http\Controllers\TrustapAuthController;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\TrustapUser;
 use App\Models\EntityTrustapTransaction;
+use App\Models\Gig;
 use App\Services\v1\Payment\TrustAppException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
+
+Route::get('check-env', function(){
+    $env = [
+        'url' => env('TRUSTAP_URL'),
+        'client_id' => env('TRUSTAP_CLIENT_ID'),
+        'client_secret' => env('TRUSTAP_CLIENT_SECRET'),
+        'api_key' => env('TRUSTAP_API_KEY'),
+        'payment_action' => env('TRUSTAP_BUYER_PAYMENT_ACTION'),
+        'payment_callback_uri' => env('TRUSTAP_PAYMENT_CALLBACK_URI'),
+        'sso_url' => env('TRUSTAP_SSO_URL'),
+        'auth_redirect_url' => env('TRUSTAP_AUTH_REDIRECT_URI'),
+        #redirection
+        'full_user_success_redirection_url_to_site' => env('FULL_USER_SUCCESS_REDIRECTION_URL'),
+        'payment_success_redirection_url_to_site' => env('PAYMENT_SUCCESS_REDIRECTION_URL')
+    ];
+    dd($env);
+});
 
 Route::get('/', function () {
     return view('welcome');
@@ -61,8 +79,8 @@ Route::get('currency-table-updater', function(){
         DB::table('currencies')->updateOrInsert([
             'id' => $value['id']                                                                                                                                                       
         ],[
-            'name' => $value['currency'],
-            'code' => $key,
+            'name' => $key,
+            'code' => strtolower($value['currency']),
             'symbol' => $value['symbol']
         ]);
     }
