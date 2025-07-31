@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
+use App\Http\Controllers\Api\v1\Client\ClientDashboardController;
 use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\GigReviewController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\File;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
+
+Route::get('explore', [ClientDashboardController::class,'explore']);
 
 Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function () {
     // Route::get('currency', [CurrencyController::class, 'index']);
