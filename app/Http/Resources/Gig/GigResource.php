@@ -6,6 +6,7 @@ use App\Constants\Constants;
 use App\Http\Resources\Pricing\PricingCollection;
 use App\Http\Resources\Pricing\PricingResource;
 use App\Http\Resources\Review\ReviewCollection;
+use App\Http\Resources\Review\ReviewResource;
 use App\Http\Resources\Tag\TagCollection;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class GigResource extends JsonResource
             'pricings' => $this->whenLoaded('gig_pricing', new PricingCollection($this->gig_pricing)),
             'tags' => $this->whenLoaded('tags', new TagCollection($this->tags)),
             'user' => $this->whenLoaded('user', new UserResource($this->user)),
-            'reviews' => $this->whenLoaded('reviews', new ReviewCollection($this->reviews))
+            'reviews' => $this->whenLoaded('reviews', ReviewResource::collection($this->reviews))
         ];
     }
 }
