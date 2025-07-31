@@ -34,7 +34,7 @@ class EntityTrustapTransaction extends Model
     }
 
     public function pricing(){
-        return $this->belongsTo(PricingTier::class, 'gig_pricing_id');
+        return $this->belongsTo(GigPricing::class,'gig_pricing_id');
     }
     
     public function buyer(){

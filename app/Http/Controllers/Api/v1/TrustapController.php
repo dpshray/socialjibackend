@@ -152,8 +152,8 @@ class TrustapController extends Controller
             ->where('status', '!=', PaymentStatusEnum::TXN_INIT)
             ->with([
                 'gig.user',           
-                'gig:id,user_id,title', 
-                'pricing:id,name,label' 
+                'gig:id,user_id,title',
+                'pricing.pricingTier:id,name,label' 
             ])
             ->paginate($per_page);
         $transactions = $this->setupPagination($pagination, fn($items) => BrandPaymentResource::collection($items))->data;       
@@ -171,8 +171,8 @@ class TrustapController extends Controller
             ->with([
                 'gig:id,user_id,title',
                 'buyer:users.id,first_name,middle_name,last_name,nick_name,email',
-                'pricing:id,name,label'
-            ])
+                'pricing.pricingTier:id,name,label'
+        ])
             ->paginate($per_page);
 
         $transactions = $this->setupPagination($pagination, fn($items) => InfluencerPaymentResource::collection($items))->data;

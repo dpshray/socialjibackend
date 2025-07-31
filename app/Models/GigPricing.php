@@ -11,4 +11,8 @@ class GigPricing extends Pivot
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
+
+    public function pricingTier(){
+        return $this->belongsTo(PricingTier::class,'pricing_tier_id');
+    }
 }

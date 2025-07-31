@@ -26,7 +26,9 @@ class InfluencerPaymentResource extends JsonResource
             // "claimedByBuyer" => $this->claimedByBuyer,
             "item_delivery_deadline" => $this->complaintPeriodDeadline,
             'gig' => $this->whenLoaded('gig', new BrandGigPaymentResource($this->gig)),
-            'pricing_tier' => $this->whenLoaded('pricing'),
+            'pricing_tier' => $this->whenLoaded('pricing', function () {
+                return $this->pricing->pricingTier;
+            }),
             'buyer' => $this->whenLoaded('buyer')
         ];
     }
