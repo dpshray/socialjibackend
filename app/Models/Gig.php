@@ -19,7 +19,7 @@ class Gig extends Model implements HasMedia
     {
         return $this->belongsToMany(PricingTier::class, 'gig_pricing', 'gig_id', 'pricing_tier_id')
             ->using(GigPricing::class) // tell Laravel to use the custom pivot model
-            ->withPivot('price', 'delivery_time', 'description', 'requirement', 'currency_id')
+            ->withPivot('id', 'price', 'delivery_time', 'description', 'requirement', 'currency_id')
             ->withTimestamps();
         /* return $this->belongsToMany(PricingTier::class, 'gig_pricing', 'gig_id', 'pricing_tier_id')
             ->withPivot('price', 'delivery_time', 'description', 'requirement', 'currency_id')->withTimestamps(); */

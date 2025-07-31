@@ -96,10 +96,9 @@ class TrustapPaymentGateway
             throw new Exception('Failed to create transaction: '.$response['error']);
         }
         // Log::debug('createTransaction : ',$response);
-        
         $transaction = EntityTrustapTransaction::create([
             'gig_id' => $gig->id,
-            'gig_pricing_id' => $gigPricing->id,
+            'gig_pricing_id' => $gigPricing->pivot->id,
             'gig_title' => $gig->title,
             'transactionId' => $response['id'],
             'transactionType' => 'f2f', // or set as needed
