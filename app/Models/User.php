@@ -23,7 +23,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use AuthTrait, DateOnlyTrait, HasFactory, HasRoles, Notifiable, SoftDeletes, InteractsWithMedia;
 
-    protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id', 'about'];
+    protected $fillable = ['first_name', 'middle_name', 'last_name', 'nick_name', 'email', 'password', 'email_verified_at', 'provider', 'provider_id', 'about', 'brand_category_id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -108,10 +108,29 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         return $this->hasMany(Gig::class);
     }
 
+    public function brandCategory(){
+        return $this->belongsTo(BrandCategory::class);
+    }
+
+    public function brandRatings(){
+        return $this->hasMany(BrandRating::class,'brand_id');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(Constants::MEDIA_USER)
             ->useFallbackUrl(asset('assets/img/user-default.png'))
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
+            ->registerMediaConversions(function (Media $media) {
+                $this->addMediaConversion('thumbnail')
+                    ->width(200)
+                    ->height(200)
+                    ->nonQueued(); #included this since we are not queueing conversions
+            });
+        
+        $this->addMediaCollection(Constants::MEDIA_BRAND_BANNER)
+            ->useFallbackUrl(asset('assets/img/banner-default.jpg'))
             ->singleFile()
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
             ->registerMediaConversions(function (Media $media) {

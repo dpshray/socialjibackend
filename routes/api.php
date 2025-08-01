@@ -21,7 +21,13 @@ use Illuminate\Support\Facades\File;
 require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
 
-Route::get('explore', [ClientDashboardController::class,'explore']);
+Route::prefix('client')->group(function(){
+    Route::prefix('explorer')->controller(ClientDashboardController::class)->group(function(){
+        Route::get('influencer', 'influencerExplorer');
+        Route::get('brand', 'brandExplorer');
+        Route::get('top_sales', 'topSalesExplorer');
+    });
+});
 
 Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function () {
     // Route::get('currency', [CurrencyController::class, 'index']);
