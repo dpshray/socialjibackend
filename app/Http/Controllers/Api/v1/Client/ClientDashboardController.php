@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\v1\Client;
 
 use App\Constants\Constants;
@@ -13,29 +12,48 @@ use App\Models\User;
 use App\Traits\PaginationTrait;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ClientDashboardController extends Controller
 {
     use PaginationTrait, ResponseTrait;
 
-    public function influencerExplorer(Request $request){
-        $per_page = $request->query('per_page',10);
-        $influencer = User::role(Constants::ROLE_INFLUENCER)
-                        ->with(['reviews', 'socialProfiles.socialSite','media', 'gigs'])
-                        ->withCount(['gigs'])
-                        ->take($per_page)
-                        ->get();
-        $influencer = InfluencerResource::collection($influencer);
-        return $this->apiSuccess('influencer explorer data', $influencer);
+    public function influencerExplorer(Request $request)
+    {
+        $per_page = $request->query('per_page', 10);
+
+        $influencers = User::role(Constants::ROLE_INFLUENCER)
+            ->whereHas('socialProfiles')
+            ->with(['reviews', 'socialProfiles.socialSite', 'media', 'gigs'])
+            ->withCount('gigs')
+            ->select('users.*')
+            ->selectSub(function ($query) {
+                $query->from('social_profiles')
+                    ->selectRaw('COALESCE(SUM(follower_count), 0)')
+                    ->whereColumn('social_profiles.user_id', 'users.id');
+            }, 'total_followers')
+            ->orderByDesc('total_followers')
+            ->take($per_page)
+            ->get();
+
+        $influencers = InfluencerResource::collection($influencers);
+        return $this->apiSuccess('influencer explorer data', $influencers);
     }
 
-    public function brandExplorer(Request $request){
+    public function brandExplorer(Request $request)
+    {
         $per_page = $request->query('per_page', 10);
-        $brand = User::role(Constants::ROLE_BRAND)
-                    ->with(['media', 'socialProfiles.socialSite', 'brandCategory', 'brandRatings'])
-                    ->take($per_page)
-                    ->get();
+        $brand    = User::role(Constants::ROLE_BRAND)
+            ->whereHas('socialProfiles')
+            ->with(['media', 'socialProfiles.socialSite', 'brandCategory', 'brandRatings'])
+            ->select('users.*')
+            ->selectSub(function ($query) {
+                $query->from('social_profiles')
+                    ->selectRaw('COALESCE(SUM(follower_count), 0)')
+                    ->whereColumn('social_profiles.user_id', 'users.id');
+            }, 'total_followers')
+            ->orderByDesc('total_followers')
+            ->take($per_page)
+            ->get();
         $brand = BrandResource::collection($brand);
 
         // $brand = $brand->paginate($per_page);
@@ -43,19 +61,20 @@ class ClientDashboardController extends Controller
         return $this->apiSuccess('brand explorer data', $brand);
     }
 
-    public function topSalesExplorer(Request $request){
-        $per_page = $request->query('per_page', 10);
+    public function topSalesExplorer(Request $request)
+    {
+        $per_page  = $request->query('per_page', 10);
         $top_sales = EntityTrustapTransaction::join('gigs', 'gigs.id', '=', 'entity_trustap_transactions.gig_id')
-                    ->selectRaw('COUNT(entity_trustap_transactions.gig_id) as total_sold, entity_trustap_transactions.gig_id, gigs.title')
-                    ->groupBy('entity_trustap_transactions.gig_id', 'gigs.title')
-                    ->with(['gig' => ['media', 'gig_pricing']])
-                    ->where(function($qry){
-                        return $qry->where('entity_trustap_transactions.status', PaymentStatusEnum::HANDOVERED->value);
-                    })
-                    ->whereDate('complaintPeriodDeadline','<=', now())
-                    ->orderBy('total_sold', 'DESC')
-                    ->take($per_page)
-                    ->get();
+            ->selectRaw('COUNT(entity_trustap_transactions.gig_id) as total_sold, entity_trustap_transactions.gig_id, gigs.title')
+            ->groupBy('entity_trustap_transactions.gig_id', 'gigs.title')
+            ->with(['gig' => ['media', 'gig_pricing']])
+            ->where(function ($qry) {
+                return $qry->where('entity_trustap_transactions.status', PaymentStatusEnum::HANDOVERED->value);
+            })
+            ->whereDate('complaintPeriodDeadline', '<=', now())
+            ->orderBy('total_sold', 'DESC')
+            ->take($per_page)
+            ->get();
         $top_sales = TopSaleResource::collection($top_sales);
         return $this->apiSuccess('top sales explorer data', $top_sales);
 
