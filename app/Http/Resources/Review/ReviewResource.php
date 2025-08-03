@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Review;
 
+use App\Constants\Constants;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -35,7 +36,8 @@ class ReviewResource extends JsonResource
                     'last_name' => $reviewer->last_name,
                     'nick_name' => $reviewer->nick_name
                 ];
-            })
+            }),
+            'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
         ];
     }
 }

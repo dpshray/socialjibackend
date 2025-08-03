@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\v1\GigReviewController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
+use App\Http\Controllers\Api\v1\Review\SubReviewController;
 use App\Http\Controllers\TagController;
 use App\Http\Middleware\AdminRole;
 use App\Http\Middleware\BrandInfluencerRole;
@@ -49,6 +50,7 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
             Route::delete('delete-review/{review}', 'gigReviewRemover');#influencer brand
             Route::post('review-helpful/{review}', 'markReviewHelpful'); #influencer brand
         });
+        Route::apiResource('review.sub-review', SubReviewController::class)->shallow()->except('show');
     });
 
     Route::middleware([InfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {

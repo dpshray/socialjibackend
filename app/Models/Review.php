@@ -15,4 +15,8 @@ class Review extends Model
     public function helpfuls(){
         return $this->hasMany(Helpful::class);
     }
+
+    public function subReviews(){
+        return $this->hasMany(SubReview::class);
+    }
 }

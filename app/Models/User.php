@@ -83,9 +83,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     public function tags(){
         return $this->hasMany(Tag::class);
     }
-    /**
-     * 
-     */
+
     /* public function influencerRatings(){
         return $this->hasMany(Rating::class,'influencer_id');
     } */
