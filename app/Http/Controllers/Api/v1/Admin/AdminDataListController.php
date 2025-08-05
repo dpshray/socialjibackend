@@ -38,7 +38,7 @@ class AdminDataListController extends Controller
             ->latest()
             ->paginate($per_page);
         $gigs = $this->setupPagination($pagination, fn($data) => BrandResource::collection($data))->data;
-        return $this->apiSuccess('list of active gigs for admin', $gigs);
+        return $this->apiSuccess('list of active brands for admin', $gigs);
     }
 
     public function influencerRecord(Request $request){
@@ -50,7 +50,7 @@ class AdminDataListController extends Controller
                         ->latest()
                         ->paginate($per_page);
         $gigs = $this->setupPagination($pagination, fn($data) => InfluencerResource::collection($data))->data;
-        return $this->apiSuccess('list of active gigs', $gigs);
+        return $this->apiSuccess('list of active influencer for admin', $gigs);
     }
 
     public function paymentRecord(Request $request){
