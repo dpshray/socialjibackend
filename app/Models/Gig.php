@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Constants\Constants;
+use App\Enums\PaymentStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\{HasMedia, InteractsWithMedia, MediaCollections\Models\Media};
@@ -53,6 +54,10 @@ class Gig extends Model implements HasMedia
 
     public function reviews(){
         return $this->hasMany(Review::class);
+    }
+
+    public function noOfGigSold(){
+        return $this->hasMany(EntityTrustapTransaction::class)->where('status', PaymentStatusEnum::HANDOVERED->value)->where('complaintPeriodDeadline','<=',now());
     }
 
     public function registerMediaCollections(): void

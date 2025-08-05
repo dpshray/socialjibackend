@@ -3,14 +3,12 @@
 use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\Client\ClientDashboardController;
-use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\GigReviewController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
 use App\Http\Controllers\Api\v1\Review\SubReviewController;
 use App\Http\Controllers\TagController;
-use App\Http\Middleware\AdminRole;
 use App\Http\Middleware\BrandInfluencerRole;
 use App\Http\Middleware\BrandRole;
 use App\Http\Middleware\InfluencerRole;
@@ -21,12 +19,16 @@ use Illuminate\Support\Facades\File;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
+require __DIR__.'/admin.php';
 
 Route::prefix('client')->group(function(){
-    Route::prefix('explorer')->controller(ClientDashboardController::class)->group(function(){
-        Route::get('influencer', 'influencerExplorer');
-        Route::get('brand', 'brandExplorer');
-        Route::get('top_sales', 'topSalesExplorer');
+    Route::controller(ClientDashboardController::class)->group(function(){
+        Route::prefix('explorer')->group(function(){
+            Route::get('influencer', 'influencerExplorer');
+            Route::get('brand', 'brandExplorer');
+            Route::get('top_sales', 'topSalesExplorer');
+        });
+        Route::get('insights', 'insightData');
     });
 });
 
@@ -57,8 +59,5 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::apiResource('gig', GigController::class)->except(['show']);
         Route::get('tag/search', [TagController::class, 'search'])->name('tag.search');
         Route::apiResource('tag', TagController::class)->except(['show']);
-    });
-    Route::middleware([AdminRole::class])->prefix('admin')->group(function(){
-        Route::apiResource('currency', CurrencyController::class);
     });
 });

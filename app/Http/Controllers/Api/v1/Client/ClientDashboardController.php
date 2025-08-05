@@ -7,11 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Client\Explorer\BrandResource;
 use App\Http\Resources\Client\Explorer\InfluencerResource;
 use App\Http\Resources\Client\Explorer\TopSaleResource;
+use App\Http\Resources\UserResource;
 use App\Models\EntityTrustapTransaction;
 use App\Models\User;
 use App\Traits\PaginationTrait;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientDashboardController extends Controller
 {
@@ -77,6 +79,36 @@ class ClientDashboardController extends Controller
             ->get();
         $top_sales = TopSaleResource::collection($top_sales);
         return $this->apiSuccess('top sales explorer data', $top_sales);
+    }
 
+    public function insightData(Request $request){
+        $followers = DB::select('SELECT ss.label, sum(follower_count) AS followers_sum FROM social_profiles AS sp JOIN social_sites AS ss ON sp.social_site_id=ss.id  GROUP BY social_site_id');
+        $usersByMonth = User::selectRaw('MONTH(email_verified_at) as month, COUNT(*) as total')
+                        ->whereYear('email_verified_at', now()->year)
+                        ->groupBy(DB::raw('MONTH(email_verified_at)'))
+                        ->orderBy('month')
+                        ->get();
+        $top_gig_sellers = EntityTrustapTransaction::with(['gig.user.media'])
+            ->select(
+                'gigs.user_id',
+                'users.id',
+                'users.nick_name',
+                'users.first_name',
+                'users.middle_name',
+                'users.last_name',
+                'users.email',
+                'social_profiles.*',
+                DB::raw('COUNT(*) as total')
+            )
+            ->where('entity_trustap_transactions.status', PaymentStatusEnum::HANDOVERED->value)
+            ->where('complaintPeriodDeadline', '<=', now())
+            ->join('gigs', 'gigs.id', '=', 'entity_trustap_transactions.gig_id')
+            ->join('users', 'users.id', '=', 'gigs.user_id')
+            ->join('social_profiles', 'social_profiles.user_id','users.id')
+            ->groupBy('gigs.user_id')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+        return $top_gig_sellers;
     }
 }

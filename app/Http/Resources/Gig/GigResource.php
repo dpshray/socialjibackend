@@ -22,21 +22,6 @@ class GigResource extends JsonResource
     public function toArray(Request $request): array
     {
         // return parent::toArray($request);
-        /* 
-        "id": 68,
-        "user_id": 3,
-        "title": "Updted gigs",
-        "category": "An updated gig category",
-        "description": "some updated gig description here",
-        "requirements": "some updated gigs requirements one",
-        "features": "some updated gigs features here",
-        "image": null,
-        "status": 0,
-        "published_at": "2025-06-12 20:00:10",
-        "created_at": "2025-06-24T07:34:12.000000Z",
-        "updated_at": "2025-06-24T07:51:51.000000Z",
-        "deleted_at": null,
-        */
         return [
             'id' => $this->id,
             'title' => $this->title,
@@ -46,10 +31,12 @@ class GigResource extends JsonResource
             'features' => $this->when($this->features, $this->features),
             'published_at' => $this->when($this->published_at, $this->published_at),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_GIG)),
-            'pricings' => $this->whenLoaded('gig_pricing', new PricingCollection($this->gig_pricing)),
-            'tags' => $this->whenLoaded('tags', new TagCollection($this->tags)),
-            'user' => $this->whenLoaded('user', new UserResource($this->user)),
-            'reviews' => $this->whenLoaded('reviews', ReviewResource::collection($this->reviews))
+            'pricings' => new PricingCollection($this->whenLoaded('gig_pricing')),
+            'tags' => new TagCollection($this->whenLoaded('tags')),
+            'user' => new UserResource($this->whenLoaded('user')),
+            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')) ,
+            'total_reviews' => $this->whenCounted('reviews'),
+            'item_sold' => $this->whenCounted('noOfGigSold')
         ];
     }
 }

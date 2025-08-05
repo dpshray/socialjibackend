@@ -27,9 +27,13 @@ class InfluencerResource extends JsonResource
             'total_gigs' => $this->whenCounted('gigs'),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
             'rating' => $this->whenLoaded('reviews', function(){
-                return $this->reviews->avg('rating');
+                $rating = $this->reviews->avg('rating');
+                if ($rating) {
+                    return round($rating, 1);
+                }
+                return 0;
             }),
-            'social_profiles' => $this->whenLoaded('socialProfiles', SocialProfileResource::collection($this->socialProfiles)),
+            'social_profiles' => SocialProfileResource::collection($this->whenLoaded('socialProfiles')),
             'highest_price_gig' => $this->whenLoaded('gigs', function(){
                 return $this->gigs->pluck('gig_pricing')->flatten()->max('pivot.price');
             }),
