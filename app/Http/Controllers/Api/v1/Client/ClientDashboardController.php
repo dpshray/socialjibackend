@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Client\Explorer\BrandResource;
 use App\Http\Resources\Client\Explorer\InfluencerResource;
 use App\Http\Resources\Client\Explorer\TopSaleResource;
-use App\Http\Resources\Client\Insight\TopBrandResource;
+use App\Http\Resources\Client\Insight\TopBrandInfluencerResource;
 use App\Http\Resources\UserResource;
 use App\Models\BrandCategory;
 use App\Models\EntityTrustapTransaction;
@@ -100,7 +100,7 @@ class ClientDashboardController extends Controller
             ->orderByDesc('social_profiles_sum_follower_count')
             ->take($per_page)
             ->get();
-        $users = TopBrandResource::collection($top_brand_with_max_followers);
+        $users = TopBrandInfluencerResource::collection($top_brand_with_max_followers);
         return $this->apiSuccess('top brands with max followers', $users);
     }
 
@@ -113,7 +113,7 @@ class ClientDashboardController extends Controller
             ->orderByDesc('social_profiles_sum_follower_count')
             ->take($per_page)
             ->get();
-        $user  = TopBrandResource::collection($top_influencer_with_max_followers);
+        $user  = TopBrandInfluencerResource::collection($top_influencer_with_max_followers);
         return $this->apiSuccess('top influencer with max followers', $user);
 
     }

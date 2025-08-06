@@ -29,8 +29,8 @@ class UserResource extends JsonResource
             'about' => $this->when(!is_null($this->about), $this->about),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
             "roles" => $this->whenLoaded('roles', fn() => $this->getRoleNames()->first()),
-            "influencer_rating" => $this->whenLoaded('brandReviews', function(){
-                $rating = $this->brandReviews->avg('rating');
+            "influencer_rating" => $this->whenLoaded('gigReviews', function(){
+                $rating = $this->gigReviews->avg('rating');
                 return ($rating <=0) ? 0 : round($rating,1);
             }),
             'social_profiles' => $this->whenLoaded('socialProfiles', function(){

@@ -26,8 +26,8 @@ class InfluencerResource extends JsonResource
             'email' => $this->email,
             'total_gigs' => $this->whenCounted('gigs'),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
-            'rating' => $this->whenLoaded('reviews', function(){
-                $rating = $this->reviews->avg('rating');
+            'rating' => $this->whenLoaded('gigReviews', function(){
+                $rating = $this->gigReviews->avg('rating');
                 if ($rating) {
                     return round($rating, 1);
                 }

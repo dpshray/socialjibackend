@@ -44,7 +44,7 @@ class AdminDataListController extends Controller
     public function influencerRecord(Request $request){
         $per_page = $request->query('per_page', 10);
         $pagination = User::role(Constants::ROLE_INFLUENCER)
-                        ->with(['media','reviews','gigs', 'socialProfiles'])
+                        ->with(['media', 'gigReviews','gigs', 'socialProfiles'])
                         ->withCount(['gigs'])
                         ->verifiedEmail()
                         ->latest()

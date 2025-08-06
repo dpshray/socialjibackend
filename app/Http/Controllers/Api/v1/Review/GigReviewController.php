@@ -29,9 +29,8 @@ class GigReviewController extends Controller
     public function fetchGigReviews(Request $request, Gig $gig)
     {
         $per_page = $request->query('per_page');
-        $paginated_reviews = $gig->reviews()->with(['user.media', 'helpfuls'])->latest()->paginate($per_page);
-        $reviews = $paginated_reviews->items();
-        $reviews = $this->setupPagination($paginated_reviews, fn($review) => ReviewResource::collection($review))->data;
+        $paginated_reviews = $gig->reviews()->with(['reviewer.media', 'helpfuls'])->latest()->paginate($per_page);
+        $reviews = $this->setupPagination($paginated_reviews, fn($item) => ReviewResource::collection($item))->data;
         return $this->apiSuccess("gig title: {$gig->title} reviews", $reviews);
     }
 

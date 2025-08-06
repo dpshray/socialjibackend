@@ -84,17 +84,13 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         return $this->hasMany(Tag::class);
     }
 
-    /* public function influencerRatings(){
-        return $this->hasMany(Rating::class,'influencer_id');
-    } */
-    /**
-     * if used by influencer, gets all ratings of their gigs
-    */
-    public function brandReviews(){
+    /*---------- list of reviews of user that s/he has given ----------*/
+    public function userReviews(){
         return $this->hasMany(Review::class);
-    }
-
-    public function reviews(){
+    }    
+    
+    /*---------- list of all reviews of all gigs of that user(influencer) ----------*/
+    public function gigReviews(){
         return $this->hasManyThrough(Review::class, Gig::class);
     }
 
@@ -106,6 +102,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         return $this->hasMany(Gig::class);
     }
 
+    /*---------- category of a brand ----------*/
     public function brandCategory(){
         return $this->belongsTo(BrandCategory::class);
     }

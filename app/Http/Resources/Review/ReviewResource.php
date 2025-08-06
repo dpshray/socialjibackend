@@ -28,15 +28,7 @@ class ReviewResource extends JsonResource
                 $downvote = $this->helpfuls->where('vote',0)->count(); 
                 return compact('upvote','downvote');
             }),
-            'reviewer' => $this->whenLoaded('user', function(){
-                $reviewer = $this->user;
-                return [
-                    'first_name' => $reviewer->first_name,
-                    'middle_name' => $reviewer->middle_name,
-                    'last_name' => $reviewer->last_name,
-                    'nick_name' => $reviewer->nick_name
-                ];
-            }),
+            'reviewer' => new UserResource($this->whenLoaded('reviewer')),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
         ];
     }

@@ -15,36 +15,6 @@ class SubReviewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        /* 
-                    {
-                "id": 2,
-                "review_id": 20,
-                "user_id": 2,
-                "comment": "this is some sub comment",
-                "created_at": "2025-08-03T14:23:48.000000Z",
-                "updated_at": "2025-08-03T14:23:48.000000Z",
-                "deleted_at": null,
-                "reviewer": {
-                    "id": 2,
-                    "brand_category_id": 10,
-                    "first_name": "brand",
-                    "middle_name": null,
-                    "last_name": null,
-                    "nick_name": "brandon",
-                    "email": "brand@gmail.com",
-                    "about": null,
-                    "email_verified_at": "2025-06-30T09:05:13.000000Z",
-                    "provider": null,
-                    "image": null,
-                    "phone": null,
-                    "address": null,
-                    "status": null,
-                    "created_at": "2025-08-03",
-                    "updated_at": "2025-08-01",
-                    "deleted_at": null
-                }
-            }, */
-        // return parent::toArray($request);
         return [
             'comment' => $this->comment,
             'commented_at' => $this->updated_at->diffForHumans(),
