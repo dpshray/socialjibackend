@@ -3,10 +3,10 @@
 use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\Client\ClientDashboardController;
-use App\Http\Controllers\Api\v1\GigReviewController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
+use App\Http\Controllers\Api\v1\Review\GigReviewController;
 use App\Http\Controllers\Api\v1\Review\SubReviewController;
 use App\Http\Controllers\TagController;
 use App\Http\Middleware\BrandInfluencerRole;
@@ -28,7 +28,13 @@ Route::prefix('client')->group(function(){
             Route::get('brand', 'brandExplorer');
             Route::get('top_sales', 'topSalesExplorer');
         });
-        Route::get('insights', 'insightData');
+        Route::prefix('insights')->group(function(){
+            Route::get('brands-by-category', 'fetchBrandsByCategory');
+            Route::get('top-brands', 'fetchTopBrands');
+            Route::get('top-influencers', 'fetchTopInfluencers');
+            Route::get('new-influencers-monthly', 'fetchNewInfluencerRegistrations');
+            Route::get('new-brands-monthly', 'fetchNewBrandRegistrations');
+        });
     });
 });
 
