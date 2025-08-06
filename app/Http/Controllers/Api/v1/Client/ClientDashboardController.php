@@ -121,10 +121,10 @@ class ClientDashboardController extends Controller
     public function fetchNewInfluencerRegistrations(Request $request){
         $year = now()->year;
         $new_influencer_registration_by_month = User::role(Constants::ROLE_INFLUENCER)
-            ->selectRaw('MONTH(email_verified_at) as month, COUNT(*) as total')
+            ->selectRaw('MONTH(email_verified_at) as month_number, COUNT(*) as total_user')
             ->whereYear('email_verified_at', $year)
             ->groupBy(DB::raw('MONTH(email_verified_at)'))
-            ->orderBy('month')
+            ->orderBy('month_number')
             ->get();
         
         return $this->apiSuccess("new influencer on each month of year : $year", $new_influencer_registration_by_month);
@@ -133,10 +133,10 @@ class ClientDashboardController extends Controller
     public function fetchNewBrandRegistrations(Request $request){
         $year = now()->year;
         $new_brand_registration_by_month = User::role(Constants::ROLE_BRAND)
-            ->selectRaw('MONTH(email_verified_at) as month, COUNT(*) as total')
+            ->selectRaw('MONTH(email_verified_at) as month_number, COUNT(*) as total_user')
             ->whereYear('email_verified_at', $year)
             ->groupBy(DB::raw('MONTH(email_verified_at)'))
-            ->orderBy('month')
+            ->orderBy('month_number')
             ->get();
 
         return $this->apiSuccess("new brand on each month of year : $year", $new_brand_registration_by_month);
