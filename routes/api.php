@@ -34,6 +34,8 @@ Route::prefix('client')->group(function(){
             Route::get('top-influencers', 'fetchTopInfluencers');
             Route::get('new-influencers-monthly', 'fetchNewInfluencerRegistrations');
             Route::get('new-brands-monthly', 'fetchNewBrandRegistrations');
+            Route::get('gig-by-month', 'newGigsByMonth');
+            Route::get('insight-card', 'insightWidgetInfo');
         });
     });
 });

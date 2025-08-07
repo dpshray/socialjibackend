@@ -11,6 +11,8 @@ use App\Http\Resources\Client\Insight\TopBrandInfluencerResource;
 use App\Http\Resources\UserResource;
 use App\Models\BrandCategory;
 use App\Models\EntityTrustapTransaction;
+use App\Models\Gig;
+use App\Models\Review;
 use App\Models\User;
 use App\Traits\PaginationTrait;
 use App\Traits\ResponseTrait;
@@ -152,5 +154,85 @@ class ClientDashboardController extends Controller
             ->get();
         
         return $this->apiSuccess('fetch brand categories with their brand count', $no_of_brand_based_on_category);
+    }
+
+    public function insightWidgetInfo(){
+        [$current_y, $current_m] = [now()->format('Y'), now()->format('m')];
+        [$previous_y,$previous_m] = explode('-', now()->subMonth(1)->format('Y-m'));
+
+        $current_month_no_of_gigs = Gig::whereYear('published_at', $current_y)
+            ->whereMonth('published_at', $current_m)
+            ->count();
+        $previous_month_no_of_gigs = Gig::whereYear('published_at', $previous_y)
+            ->whereMonth('published_at', $previous_m)
+            ->count();
+        $increase_on_gigs = $this->monthlyGrowthPercent($previous_month_no_of_gigs, $current_month_no_of_gigs);
+        $gig = [
+            'new_gig_this_month' => round($current_month_no_of_gigs,1),
+            'increase_on_gigs_by_percentage' => round($increase_on_gigs,1) 
+        ];
+
+        $current_month_no_of_influencers = User::role(Constants::ROLE_INFLUENCER)
+            ->whereYear('email_verified_at', $current_y)
+            ->whereMonth('email_verified_at', $current_m)
+            ->count();
+        
+        $previous_month_no_of_influencers = User::role(Constants::ROLE_INFLUENCER)
+            ->whereYear('email_verified_at', $previous_y)
+            ->whereMonth('email_verified_at', $previous_m)
+            ->count();
+        $increase_on_influencers = $this->monthlyGrowthPercent($previous_month_no_of_influencers, $current_month_no_of_influencers);
+        $influencer = [
+            'new_influencer_this_month' => round($current_month_no_of_influencers, 1),
+            'increase_on_influencer_by_percentage' => round($increase_on_influencers,1)
+        ];
+
+        $current_month_no_of_brands = User::role(Constants::ROLE_BRAND)
+            ->whereYear('email_verified_at', $current_y)
+            ->whereMonth('email_verified_at', $current_m)
+            ->count();
+
+        $previous_month_no_of_brands = User::role(Constants::ROLE_BRAND)
+            ->whereYear('email_verified_at', $previous_y)
+            ->whereMonth('email_verified_at', $previous_m)
+            ->count();
+        $increase_on_brands = $this->monthlyGrowthPercent($previous_month_no_of_brands, $current_month_no_of_brands);
+        $brand = [
+            'new_brand_this_month' => round($current_month_no_of_brands, 1),
+            'increase_on_brand_by_percentage' => round($increase_on_brands, 1)
+        ];
+        #----
+        $current_month_no_of_reviews = Review::whereYear('created_at', $current_y)
+            ->whereMonth('created_at', $current_m)
+            ->count();
+
+        $previous_month_no_of_reviews = Review::whereYear('created_at', $current_y)
+            ->whereMonth('created_at', $previous_m)
+            ->count();
+        $increase_on_reviews = $this->monthlyGrowthPercent($previous_month_no_of_reviews, $current_month_no_of_reviews);
+        $reviews = [
+            'new_review_this_month' => round($current_month_no_of_reviews, 1),
+            'increase_on_review_by_percentage' => round($increase_on_reviews, 1)
+        ];
+
+        return $this->apiSuccess('insight card data', compact('gig','influencer','brand','reviews'));
+    }
+
+    public function newGigsByMonth(){
+        $currentYear = now()->year;
+        $groupedGigs = Gig::selectRaw('MONTH(published_at) as month_number, COUNT(*) as total_gigs')
+            ->whereYear('published_at', $currentYear)
+            ->groupByRaw('MONTH(published_at)')
+            ->orderByRaw('MONTH(published_at)')
+            ->get();
+        return $this->apiSuccess('gig of year : '. $currentYear, $groupedGigs);
+    }
+
+    public function monthlyGrowthPercent(int $previous_month, int $current_month){
+        if ($previous_month > 0) {
+            return (($current_month - $previous_month) / $previous_month) * 100;
+        } else {
+            return $current_month > 0 ? 100 : 0; // or "N/A"
+        }
     }
 }
