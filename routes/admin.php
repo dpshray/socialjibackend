@@ -6,9 +6,9 @@ use App\Http\Controllers\Api\v1\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\v1\Admin\AdminDataListController;
 use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Middleware\AdminRole;
+use App\Http\Middleware\JwtMiddleware;
 
-
-Route::prefix('admin')->group(function(){
+Route::middleware(JwtMiddleware::class)->prefix('admin')->group(function(){
     Route::post('login', [AdminAuthController::class, 'login']);
     Route::middleware([AdminRole::class])->group(function () {
         Route::apiResource('currency', CurrencyController::class);
