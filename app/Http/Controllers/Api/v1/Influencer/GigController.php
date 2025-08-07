@@ -123,7 +123,7 @@ class GigController extends Controller
         $per_page= $request->query('per_page');
         $gigs = Gig::with([
                 'tags:id,name', 
-                'user:id,nick_name,first_name,middle_name,last_name' => ['brandReviews','media'],
+                'user:id,nick_name,first_name,middle_name,last_name' => ['gigReviews','media'],
                 'media'
                 ])
                 ->when(!Auth::user()->isBrand(), function($qry){
