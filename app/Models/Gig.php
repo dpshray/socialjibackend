@@ -57,7 +57,9 @@ class Gig extends Model implements HasMedia
     }
 
     public function noOfGigSold(){
-        return $this->hasMany(EntityTrustapTransaction::class)->where('status', PaymentStatusEnum::HANDOVERED->value)->where('complaintPeriodDeadline','<=',now());
+        return $this->hasMany(EntityTrustapTransaction::class)->paymentOverallComplete();
+                // ->where('status', PaymentStatusEnum::HANDOVERED->value)
+                // ->where('complaintPeriodDeadline','<=',now());
     }
 
     public function registerMediaCollections(): void
