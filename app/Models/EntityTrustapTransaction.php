@@ -65,4 +65,8 @@ class EntityTrustapTransaction extends Model
             && $this->delivered_at->addHours(self::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY)->isPast()
             && $this->complaintPeriodDeadline->gte(now());
     }
+
+    public function scopePaymentOverallComplete($query){
+        return $query->where('status',PaymentStatusEnum::HANDOVERED->value)->whereDate('complaintPeriodDeadline','<=',now());
+    }
 }
