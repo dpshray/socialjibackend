@@ -22,15 +22,17 @@ class TopBrandInfluencerResource extends JsonResource
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
             'nick_name' => $this->nick_name,
-            'address' => $this->address,
-            'email_verified_at' => $this->email_verified_at,
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_USER)),
             'brand' => $this->whenLoaded('brandCategory'),
-            'socialProfiles' => $this->whenLoaded('socialProfiles'),
+            // 'socialProfiles' => $this->whenLoaded('socialProfiles'),
+            // 'total_followers' => $this->whenLoaded('socialProfiles'),
+            'avg_follower_growth_rate_per_week' => $this->whenLoaded('socialProfiles', fn() => round($this->socialProfiles->avg('follower_growth_rate_per_week'),1)),
             "influencer_rating" => $this->whenLoaded('gigReviews', function () {
                 $rating = $this->gigReviews->avg('rating');
                 return ($rating <= 0) ? 0 : round($rating, 1);
             }),
+            'highest_like' => $this->whenLoaded('socialProfiles', fn() => $this->socialProfiles->max('highest_like')),
+            "social_profiles_sum_follower" => (int) $this->social_profiles_sum_follower_count
         ];
     }
 }
