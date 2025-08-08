@@ -26,10 +26,46 @@ class TrustapPaymentGateway
     public function fetchSupportedCountryCodes(){
         try {
             // throw new \Exception('A TEST EXCEPTION');
-            return Cache::remember('payment_country_codes', 3600, function () {
-                return Http::withBasicAuth(config('services.trustap.api_key'), '')
+            return Cache::remember('payment_country_codes', 86400, function () {
+                $api_country_code = Http::withBasicAuth(config('services.trustap.api_key'), '')
                     ->get(config('services.trustap.url').'client/supported_registration_countries')
                     ->json();
+                $countries = [
+                    'at' => 'Austria',
+                    'au' => 'Australia',
+                    'be' => 'Belgium',
+                    'bg' => 'Bulgaria',
+                    'ca' => 'Canada',
+                    'ch' => 'Switzerland',
+                    'cy' => 'Cyprus',
+                    'cz' => 'Czech Republic',
+                    'de' => 'Germany',
+                    'dk' => 'Denmark',
+                    'ee' => 'Estonia',
+                    'es' => 'Spain',
+                    'fi' => 'Finland',
+                    'fr' => 'France',
+                    'gb' => 'United Kingdom',
+                    'gr' => 'Greece',
+                    'hr' => 'Croatia',
+                    'hu' => 'Hungary',
+                    'ie' => 'Ireland',
+                    'it' => 'Italy',
+                    'lt' => 'Lithuania',
+                    'lu' => 'Luxembourg',
+                    'lv' => 'Latvia',
+                    'mt' => 'Malta',
+                    'nl' => 'Netherlands',
+                    'no' => 'Norway',
+                    'pl' => 'Poland',
+                    'pt' => 'Portugal',
+                    'ro' => 'Romania',
+                    'se' => 'Sweden',
+                    'si' => 'Slovenia',
+                    'sk' => 'Slovakia',
+                    'us' => 'United States',
+                ];
+                return array_intersect(array_flip($countries), $api_country_code);
             });
         } catch (\Exception $e) {
             logError(__METHOD__, func_get_args(), $e->getMessage(), 'Error while fetching country codes.');

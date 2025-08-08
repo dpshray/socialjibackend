@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\Client\ClientDashboardController;
+use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
@@ -42,6 +43,7 @@ Route::prefix('client')->group(function(){
 
 Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function () {
     // Route::get('currency', [CurrencyController::class, 'index']);
+    Route::apiResource('currency', CurrencyController::class);
     Route::get('pricing-tier', [PricingTierController::class, 'index'])->name('pricing_tier.index');
     Route::middleware([BrandRole::class])->group(function () {
         Route::get('influencer/search/{keyword}', [InfluencerController::class, 'findInfluencers'])->name('find');

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\v1\Admin;
 use App\Constants\Constants;
 use App\Enums\PaymentStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Admin\ListDetail\Brand\BrandListDetailResource;
+use App\Http\Resources\Admin\ListDetail\Gig\GigListDetailResource;
+use App\Http\Resources\Admin\ListDetail\Influencer\InfluencerListDetailResource;
 use App\Http\Resources\Admin\PaymentResource;
 use App\Http\Resources\Client\Explorer\BrandResource;
 use App\Http\Resources\Client\Explorer\InfluencerResource;
@@ -68,4 +71,49 @@ class AdminDataListController extends Controller
         // $top_sales = TopSaleResource::collection($top_sales);
         return $this->apiSuccess('admin payment data', $payments);
     }
+
+    public function gigListDetail(Request $request, Gig $gig){
+        $gig->load([
+            'media',
+            'tags:id,name',
+            'gig_pricing',
+            'user.media'
+        ])
+        ->loadCount(['reviews','noOfGigSold']);
+        return $this->apiSuccess('gig details', new GigListDetailResource($gig));
+    }
+
+    public function brandListDetail(Request $request, User $user){
+        if (!$user->isBrand()) {
+            return $this->apiError('this user does not belong to role: brand'); 
+        }
+        $data = $user->load([
+            'media',
+            'brandCategory',
+            'socialProfiles.socialSite:id,name,label', 
+            'brandRatings',
+            'userTrustapMetadata' => ['buyerTransactions']
+            ])
+            ->loadCount('userReviews');
+        return $this->apiSuccess('brand details', new BrandListDetailResource($data));
+    }
+
+    public function influencerListDetail(Request $request, User $user){
+        if (!$user->isInfluencer()) {
+            return $this->apiError('this user does not belong to role: Influencer');
+        }
+        $data = $user->load([
+                'media',
+                'gigReviews',
+                'socialProfiles.socialSite:id,name,label',
+                'userTrustapMetadata' => ['sellerTransactions']
+            ])
+            ->loadCount(['gigs', 'gigReviews']);
+        return $this->apiSuccess('influencer details', new InfluencerListDetailResource($data));
+    }
+
+    public function paymentListDetail(Request $request){
+
+    }
+
 }

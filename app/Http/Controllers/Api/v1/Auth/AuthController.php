@@ -76,7 +76,13 @@ class AuthController extends Controller
 
     public function fetchRoles(){
         $roles = Cache::get('roles');
-        return $this->apiSuccess('role list', $roles);
+        $temp = [];
+        foreach ($roles as $role) {
+            if ($role->name != 'Admin') {
+                $temp[] = $role;
+            }
+        }
+        return $this->apiSuccess('role list', $temp);
     }
 
     public function accountRemover(){

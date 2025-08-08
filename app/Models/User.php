@@ -99,14 +99,15 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     }
 
     public function gigs(){
-        return $this->hasMany(Gig::class);
+        return $this->hasMany(Gig::class)->where('status',1);
     }
 
     /*---------- category of a brand ----------*/
     public function brandCategory(){
         return $this->belongsTo(BrandCategory::class);
     }
-
+    
+    /*---------- rating of a brand ----------*/
     public function brandRatings(){
         return $this->hasMany(BrandRating::class,'brand_id');
     }

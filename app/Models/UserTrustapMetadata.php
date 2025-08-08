@@ -34,10 +34,10 @@ class UserTrustapMetadata extends Model
     }
 
     public function buyerTransactions(){
-        return $this->hasMany(EntityTrustapTransaction::class, 'buyerId', 'trustapGuestUserId')->latest();
+        return $this->hasMany(EntityTrustapTransaction::class, 'buyerId', 'trustapGuestUserId')->paymentOverallComplete()->latest();
     }
     
     public function sellerTransactions(){
-        return $this->hasMany(EntityTrustapTransaction::class, 'sellerId', 'trustapGuestUserId')->latest();
+        return $this->hasMany(EntityTrustapTransaction::class, 'sellerId', 'trustapGuestUserId')->paymentOverallComplete()->latest();
     }
 }

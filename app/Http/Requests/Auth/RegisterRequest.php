@@ -31,7 +31,8 @@ class RegisterRequest extends FormRequest
             'nick_name' => ['required', 'string', 'max:255', Rule::unique('users')],
             'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
             'role_id' => ['required', Rule::exists('roles', 'id')->whereNotIn('name', ['Admin'])],
-            'image' => ['required', 'max:1024']
+            'image' => ['required', 'max:1024'],
+            'country_code' => ['sometimes', Rule::in(array_values(cache('payment_country_codes')))]
         ];
     }
 
