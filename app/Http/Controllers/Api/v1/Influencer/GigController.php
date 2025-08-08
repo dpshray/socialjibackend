@@ -66,7 +66,7 @@ class GigController extends Controller
         try {
             $gig = Gig::with([
                 'reviews' => fn($q) => $q->latest()->take(5),
-                'reviews.user.media',
+                'reviews.reviewer.media',
                 'reviews.helpfuls',
                 'media',
                 'gig_pricing',
