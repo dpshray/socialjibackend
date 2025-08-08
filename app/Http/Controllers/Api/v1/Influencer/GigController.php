@@ -71,6 +71,7 @@ class GigController extends Controller
                 'media',
                 'gig_pricing',
                 'tags',
+                'user'
             ])->find($gig->id);
 
             $data = new GigResource($gig);
