@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\File;
 require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/social_status_fetcher.php';
 
 Route::prefix('client')->group(function(){
     Route::controller(ClientDashboardController::class)->group(function(){
