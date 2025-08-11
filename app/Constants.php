@@ -19,4 +19,8 @@ class Constants
     public const TRUSTAP_FULL_USER = 'TrustapFullUser';
 
     public const TRUSTAP_GUEST_USER = 'TrustapGuestUser';
+
+    public const FACEBOOK_LABEL = 'Facebook';     
+    public const INSTAGRAM_LABEL = 'Instagram';
+    public const TIKTOK_LABEL = 'Tiktok';
 }
