@@ -23,12 +23,21 @@ class SocialDataFetcherController extends Controller
         $redirect_url = Socialite::driver('facebook')
             ->scopes(['pages_show_list', 'pages_read_engagement'])
             ->redirect();
+
+        $user_id = Auth::id();
+        $token = Crypt::encryptString($user_id);
+
+        $redirect_url = $redirect_url.'?token='.$token;
         return $this->apiSuccess('redirect_url', compact('redirect_url'));
     }
 
-    public function handleFacebookCallback()
+    public function handleFacebookCallback(Request $request)
     {
         try {
+            $token = $request->query('token');
+            $user_id = Crypt::decryptString($token);
+            $user = User::findOrFail($user_id);#just to verify
+
             $facebookUser = Socialite::driver('facebook')->stateless()->user();
             // Save or update user
             // $user = Auth::user();
@@ -43,13 +52,15 @@ class SocialDataFetcherController extends Controller
                 ['metadata' => $metadata]
             ); */
             $fn_row_id = $this->getFbRowId();
+            // $user_id = Auth::id();
             $social_profile = SocialProfile::updateOrCreate([
                 'social_email' => $facebookUser->getEmail(),
-                'social_site_id' => $fn_row_id
+                'social_site_id' => $fn_row_id,
+                'user_id' => $user->id 
             ],[
-                'metadata' => $metadata
+                'metadata' => $metadata,
             ]);
-            $user_id = $social_profile->user_id;
+            // $user_id = $social_profile->user_id;
             /* $fb_social_profile = SocialProfile::where([
                 ['social_email', $facebookUser->getEmail()]
             ]);
@@ -59,8 +70,10 @@ class SocialDataFetcherController extends Controller
                 ]);
             } */
             // Auth::login($user);
-            $user_id = Crypt::encryptString($user_id);
-            return redirect()->route('facebook.pages', ['token' => $user_id]);
+            // $user_id = Crypt::encryptString($user_id);
+            // $redirect_url = route('facebook.pages', ['token' => $user_id]);
+            // return $this->apiSuccess('redirect_url', compact('redirect_url'));
+            return redirect()->route('facebook.pages', ['token' => $token]);
         } catch (\Exception $e) {
             return redirect('/')->with('error', 'Facebook login failed: ' . $e->getMessage());
         }
