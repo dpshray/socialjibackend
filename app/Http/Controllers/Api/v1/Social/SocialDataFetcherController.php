@@ -21,6 +21,7 @@ class SocialDataFetcherController extends Controller
     public function redirectToFacebook()
     {
         $redirect_url = Socialite::driver('facebook')
+            ->stateless()
             ->scopes(['pages_show_list', 'pages_read_engagement'])
             ->redirect();
 

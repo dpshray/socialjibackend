@@ -9,7 +9,7 @@ Route::prefix('social-data-fetcher')
     ->controller(SocialDataFetcherController::class)
     ->group(function () {
         Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function(){
-            Route::get('fb','faceboook');
+            Route::get('fb', 'redirectToFacebook');
         });
         Route::get('fb-callback', 'facebookCallback')->name('facebook.callback');
         Route::get('facebook/pages/{token}', 'getFacebookPages')->name('facebook.pages');
