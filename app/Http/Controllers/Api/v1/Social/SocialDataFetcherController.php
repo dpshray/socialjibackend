@@ -20,15 +20,15 @@ class SocialDataFetcherController extends Controller
 
     public function redirectToFacebook()
     {
+        $user_id = Auth::id();
+        $token = Crypt::encryptString($user_id);
+        $callback_url = route('facebook.callback', ['token' => $token]);
+        
         return $redirect_url = Socialite::driver('facebook')
             ->stateless()
             ->scopes(['pages_show_list', 'pages_read_engagement'])
+            ->redirectUrl($callback_url)
             ->redirect();
-
-        // $user_id = Auth::id();
-        // $token = Crypt::encryptString($user_id);
-
-        // return $redirect_url = $redirect_url.'?token='.$token;
         // return $this->apiSuccess('redirect_url', compact('redirect_url'));
     }
 
@@ -36,7 +36,10 @@ class SocialDataFetcherController extends Controller
     {
         try {
             #$user = Auth::user();
-            $user = User::findOrFail(3);#test
+            // $user = User::findOrFail(3);#test
+            $token = $request->query('token');
+            $user_id = Crypt::decryptString($token);
+            $user = User::findOrFail($user_id);
 
             $facebookUser = Socialite::driver('facebook')->stateless()->user();
 
@@ -55,8 +58,6 @@ class SocialDataFetcherController extends Controller
             ],[
                 'metadata' => $metadata,
             ]);
-            $user_id = $user->id;
-            $token = Crypt::encryptString($user_id);
             return redirect()->route('facebook.pages', ['token' => $token]);
         } catch (\Exception $e) {
             return redirect('/')->with('error', 'Facebook login failed: ' . $e->getMessage());
