@@ -33,7 +33,7 @@ class SocialDataFetcherController extends Controller
         // return $this->apiSuccess('redirect_url', compact('redirect_url'));
     }
 
-    public function handleFacebookCallback(Request $request)
+    public function facebookCallback(Request $request)
     {
         try {
             #$user = Auth::user();
