@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Log;
 
 class SocialDataFetcherController extends Controller
 {
@@ -60,6 +61,7 @@ class SocialDataFetcherController extends Controller
             ]);
             return redirect()->route('facebook.pages', ['token' => $token]);
         } catch (\Exception $e) {
+            Log::info($e);
             return redirect('/')->with('error', 'Facebook login failed: ' . $e->getMessage());
         }
     }
@@ -79,7 +81,7 @@ class SocialDataFetcherController extends Controller
             $pages = $response->json()['data'] ?? [];
 
             $pagesWithFollowers = [];
-
+            Log::info($pages);
             foreach ($pages as $page) {
                 $pageAccessToken = $page['access_token'];
                 $pageId = $page['id'];
@@ -108,6 +110,7 @@ class SocialDataFetcherController extends Controller
             // return view('facebook.pages', compact('pagesWithFollowers'));
             return response()->json($pagesWithFollowers);
         } catch (\Exception $e) {
+            Log::info($e);
             return back()->with('error', 'Failed to fetch Facebook pages: ' . $e->getMessage());
         }
     }
