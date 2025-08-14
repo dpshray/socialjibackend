@@ -21,26 +21,29 @@ class SocialDataFetcherController extends Controller
 
     public function redirectToFacebook()
     {
-        $user_id = Auth::id();
-        $token = Crypt::encryptString($user_id);
-        $callback_url = route('facebook.callback', ['token' => $token]);
-        
-        return $redirect_url = Socialite::driver('facebook')
-            ->stateless()
+        return Socialite::driver('facebook')
             ->scopes(['pages_show_list', 'pages_read_engagement'])
-            ->redirectUrl($callback_url)
             ->redirect();
+        // $user_id = Auth::id();
+        // $token = Crypt::encryptString($user_id);
+        // $callback_url = route('facebook.callback', ['token' => $token]);#social-data-fetcher/fb-callback
+
+        // return $redirect_url = Socialite::driver('facebook')
+        //     ->stateless()
+        //     ->scopes(['pages_show_list', 'pages_read_engagement'])
+        //     ->redirectUrl($callback_url)
+        //     ->redirect();
         // return $this->apiSuccess('redirect_url', compact('redirect_url'));
     }
 
     public function facebookCallback(Request $request)
     {
         try {
-            #$user = Auth::user();
+            $user = Auth::user();
             // $user = User::findOrFail(3);#test
             $token = $request->query('token');
-            $user_id = Crypt::decryptString($token);
-            $user = User::findOrFail($user_id);
+            // $user_id = Crypt::decryptString($token);
+            // $user = User::findOrFail($user_id);
 
             $facebookUser = Socialite::driver('facebook')->stateless()->user();
 
