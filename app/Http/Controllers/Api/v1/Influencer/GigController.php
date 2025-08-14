@@ -34,7 +34,7 @@ class GigController extends Controller
     {
         $per_page = $request->query('per_page',10);
         $gigs = Gig::select('id','user_id','title','description')
-                    ->with(['media','user' => ['media', 'brandReviews']])
+                    ->with(['media','user' => ['media', 'userReviews']])
                     ->creator()
                     ->latest()
                     ->paginate($per_page);
@@ -62,7 +62,6 @@ class GigController extends Controller
         /* if (! $gig->isCreator()) {
             return $this->apiError('Forbidden', 403);
         } */
-
         try {
             $gig = Gig::with([
                 'reviews' => fn($q) => $q->latest()->take(5),

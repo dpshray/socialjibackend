@@ -22,7 +22,7 @@ class GigReviewController extends Controller
     {
         $validated = $request->validated();
         $validated['gig_id'] = $gig->id;
-        $comment = Auth::user()->brandReviews()->create($validated);
+        $comment = Auth::user()->userReviews()->create($validated);
         return $this->apiSuccess('gig reviewed successfully', $comment);
     }
 
