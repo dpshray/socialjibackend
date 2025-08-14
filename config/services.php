@@ -37,8 +37,9 @@ return [
 
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
-        'client_secret' => env('FACEBOOK_CLIENT_TOKEN'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT'),
+        'final_redirect_url' => env('SOCIAL_REDIRECT_URL')
     ],
 
     'trustap' => [

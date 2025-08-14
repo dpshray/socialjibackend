@@ -12,5 +12,5 @@ Route::prefix('social-data-fetcher')
             Route::get('fb', 'redirectToFacebook');
         });
         Route::get('fb-callback', 'facebookCallback')->name('facebook.callback');
-        Route::get('facebook/pages/{token}', 'getFacebookPages')->name('facebook.pages');
+        Route::get('facebook/pages/{token}/{access_token}', 'getFacebookPages')->name('facebook.pages');
 });

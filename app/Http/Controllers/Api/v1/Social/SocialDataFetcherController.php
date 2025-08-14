@@ -21,29 +21,23 @@ class SocialDataFetcherController extends Controller
 
     public function redirectToFacebook()
     {
+        // $user = User::find(3); #test
+        $user = Auth::user();
+        $token = Crypt::encryptString($user->id);
+        // dd(base64_encode($token));
         return Socialite::driver('facebook')
-            ->scopes(['pages_show_list', 'pages_read_engagement'])
-            ->redirect();
-        // $user_id = Auth::id();
-        // $token = Crypt::encryptString($user_id);
-        // $callback_url = route('facebook.callback', ['token' => $token]);#social-data-fetcher/fb-callback
-
-        // return $redirect_url = Socialite::driver('facebook')
-        //     ->stateless()
-        //     ->scopes(['pages_show_list', 'pages_read_engagement'])
-        //     ->redirectUrl($callback_url)
-        //     ->redirect();
-        // return $this->apiSuccess('redirect_url', compact('redirect_url'));
+                ->stateless()
+                ->scopes(['pages_show_list', 'pages_read_engagement'])
+                ->with(['state' => base64_encode($token)])
+                ->redirect();
     }
 
     public function facebookCallback(Request $request)
     {
         try {
-            $user = Auth::user();
-            // $user = User::findOrFail(3);#test
-            $token = $request->query('token');
-            // $user_id = Crypt::decryptString($token);
-            // $user = User::findOrFail($user_id);
+            $token = base64_decode($request->query('state'));
+            $user_id = Crypt::decryptString($token);
+            $user = User::findOrFail($user_id);#test
 
             $facebookUser = Socialite::driver('facebook')->stateless()->user();
 
@@ -60,31 +54,32 @@ class SocialDataFetcherController extends Controller
                 'social_site_id' => $fn_row_id,
                 'user_id' => $user->id,
             ],[
-                'metadata' => $metadata,
+                'metadata' => ($metadata),
             ]);
-            return redirect()->route('facebook.pages', ['token' => $token]);
+            return redirect()->route('facebook.pages', ['token' => $token, 'access_token' => $facebookUser->token]);
         } catch (\Exception $e) {
             Log::info($e);
             return redirect('/')->with('error', 'Facebook login failed: ' . $e->getMessage());
         }
     }
 
-    public function getFacebookPages(Request $request, $token)
+    public function getFacebookPages(Request $request, $token, $access_token)
     {
         $user_id = Crypt::decryptString($token);
         $user = User::findOrFail($user_id);
-        $token = $user->metadata->token;
+        // $token = $user->metadata['token'];
         // $token = Auth::user()->facebook_token;
 
         try {
             $response = Http::get("https://graph.facebook.com/v19.0/me/accounts", [
-                'access_token' => $token,
+                'access_token' => $access_token,
             ]);
 
             $pages = $response->json()['data'] ?? [];
 
             $pagesWithFollowers = [];
-            Log::info($pages);
+            // Log::info($pages);
+            $followersResponse = null;
             foreach ($pages as $page) {
                 $pageAccessToken = $page['access_token'];
                 $pageId = $page['id'];
@@ -92,15 +87,14 @@ class SocialDataFetcherController extends Controller
                 $followersResponse = Http::get("https://graph.facebook.com/v19.0/$pageId", [
                     'fields' => 'name,followers_count',
                     'access_token' => $pageAccessToken,
-                ]);
-
-                $pageData = $followersResponse->json();
+                ])->json();
+                Log::info($followersResponse);
                 $pagesWithFollowers[] = [
-                    'name' => $pageData['name'] ?? 'Unknown',
-                    'followers_count' => $pageData['followers_count'] ?? 'N/A',
+                    'name' => $followersResponse['name'] ?? 'Unknown',
+                    'followers_count' => $followersResponse['followers_count'] ?? 0,
                 ];
             }
-            $sum_of_followers = collect($followersResponse)->sum(function($item){
+            $sum_of_followers = collect($pagesWithFollowers)->sum(function($item){
                 return is_numeric($item['followers_count']) ? $item['followers_count'] : 0; 
             });
 
@@ -110,8 +104,9 @@ class SocialDataFetcherController extends Controller
                 ['social_site_id', $fb_table_id]
             ])
             ->update(['follower_count' => $sum_of_followers]);
+            return redirect()->away(config('services.facebook.final_redirect_url'));
             // return view('facebook.pages', compact('pagesWithFollowers'));
-            return response()->json($pagesWithFollowers);
+            // return response()->json($pagesWithFollowers);
         } catch (\Exception $e) {
             Log::info($e);
             return back()->with('error', 'Failed to fetch Facebook pages: ' . $e->getMessage());
