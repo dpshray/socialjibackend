@@ -34,7 +34,7 @@ class GigController extends Controller
     {
         $per_page = $request->query('per_page',10);
         $gigs = Gig::select('id','user_id','title','description')
-                    ->with(['media','user' => ['media', 'userReviews']])
+                    ->with(['media','tags','gig_pricing','user' => ['media', 'userReviews']])
                     ->creator()
                     ->latest()
                     ->paginate($per_page);
