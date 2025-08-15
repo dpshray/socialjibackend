@@ -15,6 +15,18 @@ class DataInserter extends Command
 {
     protected $signature = 'data:inserter';
     protected $description = 'Insert fake influencer and brand users with related data';
+    protected $guestUserId = [
+        "1-29aa848b-7a0b-4095-9973-13041dfee2d7",
+        "1-4ad47ebf-a286-44c9-bf60-6fc005e28243",
+        "1-10df6c54-df25-48c3-9e02-b56465645884",
+        "1-512ccc2f-0f43-4cd3-8c72-53e2fab0df29",
+        "1-9ad893dc-75c7-4bf1-8670-e082d6f77146",
+        "1-dbb26704-debd-4dd9-99ae-14bd2f3fe07a",
+        "1-c3659a80-9018-4063-acc3-12269773622d",
+        "1-28809844-291c-417b-ba72-21d98aa55c73",
+        "1-4a9c6f78-d323-4dc8-9a40-975db272a917",
+        "1-acf5f934-6265-4db9-ace6-76a7c4f8d606",
+    ];
 
     public function handle()
     {
@@ -24,9 +36,8 @@ class DataInserter extends Command
 
     private function insertUser(bool $is_influencer = true)
     {
-        $total_user = 10;
 
-        for ($x = 1; $x <= $total_user; $x++) {
+        foreach ($this->guestUserId as $key => $id) {
             try {
                 // Create user
                 $user = User::create([
@@ -35,13 +46,16 @@ class DataInserter extends Command
                     'last_name' => fake()->lastName(),
                     'nick_name' => fake()->userName() . rand(1, 1000),
                     'email' => fake()->unique()->safeEmail(),
-                    'email_verified_at' => now(),
+                    'email_verified_at' => fake()->dateTimeBetween('-1 year'),
                     'password' => Hash::make('password'),
                     'remember_token' => str()->random(10),
                     'about' => fake()->text()
                 ]);
+                clone($user)->userTrustapMetadata()->create([
+                    "trustapGuestUserId" => $id
+                ]);
 
-                $this->info("[$x/$total_user] ✔ User created: {$user->email}");
+                // $this->info("[$key/count($this->guestUserId)] ✔ User created");
 
                 if ($is_influencer) {
                     // Insert social profiles
@@ -88,7 +102,7 @@ class DataInserter extends Command
                             "requirements" => fake()->sentence(),
                             "features" => fake()->sentence(),
                             "status" => 1,
-                            "published_at" => now(),
+                            "published_at" => fake()->dateTimeBetween('-1 year')
                         ]);
 
                         // Assign pricing tiers using service
@@ -99,9 +113,9 @@ class DataInserter extends Command
                                 fake()->numberBetween(5000, 10000),
                                 fake()->numberBetween(100000, 300000),
                             ],
-                            "delivery_time" => [now(), now(), now()],
+                            "delivery_time" => [fake()->dateTimeBetween('-1 year'), fake()->dateTimeBetween('-1 year'), fake()->dateTimeBetween('-1 year')],
                             "tier_description" => [fake()->text(), fake()->text(), fake()->text()],
-                            "currency_id" => [rand(1,33), rand(1,33), rand(1,33)],
+                            "currency_id" => [rand(1,3), rand(1,3), rand(1,3)],
                             "tier_requirement" => [fake()->text(), fake()->text(), fake()->text()],
                         ];
 
@@ -118,7 +132,10 @@ class DataInserter extends Command
                 Log::error("User Insert Error: " . $e->getMessage());
                 $this->error("❌ Error inserting user: " . $e->getMessage());
             }
+        
         }
+        // $total_user = count($gurestUserId);
+        // for ($x = 1; $x <= $total_user; $x++) {}
 
         $this->info("✔ All " . ($is_influencer ? 'influencers' : 'brands') . " inserted successfully.");
     }

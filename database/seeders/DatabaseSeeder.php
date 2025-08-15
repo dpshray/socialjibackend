@@ -23,11 +23,26 @@ class DatabaseSeeder extends Seeder
             PricingTierSeeder::class,
         ]);
 
+        $currencies = [
+            [
+                'code'   => 'USD',
+                'symbol' => '$',
+                'name'   => 'United States Dollar',
+            ],
+            [
+                'code'   => 'GBP',
+                'symbol' => '£',
+                'name'   => 'British Pound Sterling',
+            ],
+            [
+                'code'   => 'EUR',
+                'symbol' => '€',
+                'name'   => 'Euro',
+            ],
+        ];
+        
         if (Schema::hasTable('currencies')) {
-            DB::table('currencies')->insert([
-                ['name' => 'nepali rupee', 'code' => 'NPR', 'symbol' => 'रु'],
-                ['name' => 'us dollar', 'code' => 'USD', 'symbol' => '$']
-            ]);
+            DB::table('currencies')->insert($currencies);
         }else{
             Log::info("currencies table does not exists");
         }
