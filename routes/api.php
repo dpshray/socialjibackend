@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\v1\CurrencyController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
+use App\Http\Controllers\Api\v1\Influencer\InfluencerCampaignController;
 use App\Http\Controllers\Api\v1\Review\GigReviewController;
 use App\Http\Controllers\Api\v1\Review\SubReviewController;
 use App\Http\Controllers\TagController;
@@ -22,6 +23,7 @@ require __DIR__.'/auth.php';
 require __DIR__.'/payment.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/social_status_fetcher.php';
+require __DIR__.'/campaign.php';
 
 Route::prefix('client')->group(function(){
     Route::controller(ClientDashboardController::class)->group(function(){
@@ -54,6 +56,7 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         // Route::get('gig/search-by-tag/{keyword}', [GigController::class, 'searchByTag'])->name('gig.searchByTag');
     });
     Route::middleware([BrandInfluencerRole::class])->group(function(){
+        Route::get('campaign-list', [InfluencerCampaignController::class, 'campaignList']);
         Route::get('gig/search', [GigController::class, 'search'])->name('gig.search');
         Route::get('influencer/gig/{gig}', [GigController::class, 'show']);
         Route::controller(GigReviewController::class)->group(function(){
@@ -66,7 +69,7 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::apiResource('review.sub-review', SubReviewController::class)->shallow()->except('show');
     });
 
-    Route::middleware([InfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {
+    Route::middleware([BrandInfluencerRole::class])->prefix('influencer')->name('influencer.')->group(function () {
         Route::apiResource('gig', GigController::class)->except(['show']);
         Route::get('tag/search', [TagController::class, 'search'])->name('tag.search');
         Route::apiResource('tag', TagController::class)->except(['show']);

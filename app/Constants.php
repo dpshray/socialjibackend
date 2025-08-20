@@ -14,6 +14,7 @@ class Constants
     public const MEDIA_GIG = "gig";
     public const MEDIA_SOCIAL = "social";
     public const MEDIA_BRAND_BANNER = "brand_banner";
+    public const MEDIA_CAMPAIGN = "campaign";
 
     public const PASSWORD_RESET_TOKEN_EXPIRE_MIN = 10;
     public const TRUSTAP_FULL_USER = 'TrustapFullUser';
