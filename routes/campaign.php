@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\v1\Brand\CampaignController;
+use App\Http\Controllers\Api\v1\Influencer\BidController;
 use App\Http\Middleware\BrandRole;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\VerifyEmail;
@@ -21,5 +22,13 @@ Route::middleware([
         VerifyEmail::class,
         BrandRole::class
     ])->group(function(){
-        Route::apiResource('campaign', CampaignController::class);
+        Route::post('update-campaign/{campaign}', [CampaignController::class,'update']);
+        Route::apiResource('campaign', CampaignController::class)->except(['update']);
+});
+
+Route::middleware([
+    JwtMiddleware::class,
+    VerifyEmail::class,
+])->group(function(){
+    Route::apiResource('campaign.bid', BidController::class)->shallow();
 });

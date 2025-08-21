@@ -21,6 +21,10 @@ class Campaign extends Model implements HasMedia
         "image"
     ];
 
+    public function bids(){
+        return $this->hasMany(Bid::class);
+    }
+
     public function tags(){
         return $this->belongsToMany(Tag::class);
     }

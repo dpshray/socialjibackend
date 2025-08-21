@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\ForbiddenItemAccessException;
+use Illuminate\Support\Facades\Log;
 
 class CampaignController extends Controller
 {
@@ -38,6 +39,7 @@ class CampaignController extends Controller
      */
     public function store(CampaignStoreRequest $request)
     {
+        // Log::debug('hreer',$request->all());
         $tag_id = $request->tag_id;
         $user = Auth::user();
         if ($tag_id) {
@@ -78,8 +80,9 @@ class CampaignController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(CampaignStoreRequest $request, Campaign $campaign)
+    public function update(Request $request, Campaign $campaign)
     {
+        // dd($request->all());
         $this->isOwner($campaign);
 
         $tag_id = $request->tag_id;
@@ -91,11 +94,15 @@ class CampaignController extends Controller
             }
         }
         // dd($tag_id);
-        $campaign = null;
-        DB::transaction(function () use($request, $user, &$campaign){
-            $campaign = $user->brandCampaigns()
-                ->create($request->only(["title", "description", "categories", "eligibility", "requirement", "price"]));
+        DB::transaction(function () use($request, &$campaign){
+            $campaign->update($request->only(["title", "description", "categories", "eligibility", "requirement", "price"]));
+            // $campaign = $user->brandCampaigns()
+            //     ->create($request->only(["title", "description", "categories", "eligibility", "requirement", "price"]));
             $campaign_tag = $request->collect('tag_id')->map(fn($item) => ['tag_id' => $item, 'campaign_id' => $campaign->id])->all();
+            // $campaign->tags()->sync();
+            // dd($campaign);
+            // dd($campaign->tags);
+            DB::table('campaign_tag')->where('campaign_id', $campaign->id)->delete();
             DB::table('campaign_tag')->insert($campaign_tag);
             if ($request->hasFile('image')) {
                 $campaign->addMedia($request->image)->toMediaCollection(Constants::MEDIA_CAMPAIGN);
@@ -103,7 +110,7 @@ class CampaignController extends Controller
         });
         $campaign->loadMissing(['tags','media']);
         $campaign = new CampaignResource($campaign);
-        return $this->apiSuccess('campaign added successfully', $campaign);
+        return $this->apiSuccess('campaign updated successfully', $campaign);
     }
 
     /**
