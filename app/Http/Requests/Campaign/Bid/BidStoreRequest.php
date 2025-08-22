@@ -23,7 +23,7 @@ class BidStoreRequest extends FormRequest
     {
         return [
             'detail' => 'nullable',
-            'bid' => 'required|decimal:2'
+            'bid' => 'required'
         ];
     }
 }
