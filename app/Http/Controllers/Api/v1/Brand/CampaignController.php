@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\ForbiddenItemAccessException;
+use App\Http\Resources\Bid\BidResource;
 use Illuminate\Support\Facades\Log;
 
 class CampaignController extends Controller
@@ -127,6 +128,14 @@ class CampaignController extends Controller
         $user = Auth::user();
         $tags = $user->tags()->select('id', 'name')->get();
         return $this->apiSuccess("user({$user->nick_name}) tags list", $tags);
+    }
+
+    public function campaignBidderList(Request $request, Campaign $campaign){
+        $this->isOwner($campaign);
+        $per_page = $request->query('per_page',10);
+        $pagination = $campaign->bids()->with(['bidder.media'])->paginate($per_page);
+        $data = $this->setupPagination($pagination, fn($item) => BidResource::collection($item))->data;
+        return $this->apiSuccess("bidders lists of campaign title : {$campaign->title}", $data);
     }
 
     private function isOwner(Campaign $campaign){

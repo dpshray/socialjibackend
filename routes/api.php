@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Brand\BrandController;
 use App\Http\Controllers\Api\v1\Client\ClientDashboardController;
 use App\Http\Controllers\Api\v1\CurrencyController;
+use App\Http\Controllers\Api\v1\DashboardController;
 use App\Http\Controllers\Api\v1\Influencer\GigController;
 use App\Http\Controllers\Api\v1\Influencer\InfluencerController;
 use App\Http\Controllers\Api\v1\Influencer\PricingTierController;
@@ -74,4 +75,12 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
         Route::get('tag/search', [TagController::class, 'search'])->name('tag.search');
         Route::apiResource('tag', TagController::class)->except(['show']);
     });
+
+    Route::middleware([BrandInfluencerRole::class])
+        ->controller(DashboardController::class)
+        ->group(function(){
+            Route::get('influencer/dashboard', 'influencer');
+            Route::get('brand/dashboard', 'brand');
+    });
 });
+

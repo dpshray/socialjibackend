@@ -22,6 +22,7 @@ Route::middleware([
         VerifyEmail::class,
         BrandRole::class
     ])->group(function(){
+        Route::get('campaign-bidders/{campaign}', [CampaignController::class, 'campaignBidderList']);
         Route::post('update-campaign/{campaign}', [CampaignController::class,'update']);
         Route::apiResource('campaign', CampaignController::class)->except(['update']);
 });

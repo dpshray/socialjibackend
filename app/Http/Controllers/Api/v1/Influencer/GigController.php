@@ -143,6 +143,7 @@ class GigController extends Controller
                         $qry->whereHas('gig_pricing', fn($qry) => $qry->where('price', '>', $from_price));
                     }
                 })
+                ->latest()
                 ->paginate($per_page);
                 // return GigSearchResource::collection($gigs);
         $gigs = $this->setupPagination($gigs, fn($items) => GigSearchResource::collection($items))->data;

@@ -111,9 +111,15 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     public function brandRatings(){
         return $this->hasMany(BrandRating::class,'brand_id');
     }
-
+    
+    /*---------- campaigns of a brand ----------*/
     public function brandCampaigns(){
         return $this->hasMany(Campaign::class,'brand_id');
+    }
+    
+    /*---------- bidders of a campaign by influencers ----------*/
+    public function bids(){
+        return $this->belongsTo(Bid::class,'bidder_id','id'); 
     }
 
     public function registerMediaCollections(): void
