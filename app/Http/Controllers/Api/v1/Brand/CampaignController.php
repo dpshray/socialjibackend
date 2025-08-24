@@ -13,12 +13,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\ForbiddenItemAccessException;
+use App\Http\Middleware\BrandInfluencerRole;
+use App\Http\Middleware\BrandRole;
 use App\Http\Resources\Bid\BidResource;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class CampaignController extends Controller
+class CampaignController extends Controller implements HasMiddleware
 {
     use ResponseTrait, PaginationTrait;
+
+
+    public static function middleware(): array
+    {
+        return [
+            // 'auth',
+            new Middleware(BrandRole::class, except: ['show']),
+            new Middleware(BrandInfluencerRole::class, only: ['show']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -73,7 +87,7 @@ class CampaignController extends Controller
      */
     public function show(Campaign $campaign)
     {
-        $this->isOwner($campaign);
+        // $this->isOwner($campaign);
         $campaign->loadMissing(['tags','media']);
         return $this->apiSuccess('Campaign detail', $campaign);
     }

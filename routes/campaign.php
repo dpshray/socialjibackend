@@ -20,10 +20,11 @@ Route::middleware([
 Route::middleware([
         JwtMiddleware::class,
         VerifyEmail::class,
-        BrandRole::class
     ])->group(function(){
-        Route::get('campaign-bidders/{campaign}', [CampaignController::class, 'campaignBidderList']);
-        Route::post('update-campaign/{campaign}', [CampaignController::class,'update']);
+        Route::middleware(BrandRole::class)->group(function(){
+            Route::get('campaign-bidders/{campaign}', [CampaignController::class, 'campaignBidderList']);
+            Route::post('update-campaign/{campaign}', [CampaignController::class,'update']);
+        });
         Route::apiResource('campaign', CampaignController::class)->except(['update']);
 });
 
