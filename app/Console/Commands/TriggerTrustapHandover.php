@@ -30,11 +30,17 @@ class TriggerTrustapHandover extends Command
      */
     public function handle()
     {
-        // info("Trustap Handover(Cron Job) running at " . now());
+        info("Trustap Handover(Cron Job) running at " . now());
         $err_count = 0;
         EntityTrustapTransaction::where('status', PaymentStatusEnum::DELIVERED->value)
-            ->where('delivered_at', '<=', now()->subDays(EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY))
-            ->chunk(100, function ($transactions) use ($err_count) {
+            /**
+             * Say delivered_at id 2025-08-25 11:00:00 
+             * then in 2025-08-25 11:00:00 <= 2025-08-26 10:00:00(false)
+             * then in 2025-08-25 11:00:00 <= 2025-08-26 11:00:00(true)
+             *
+            */
+            ->where('delivered_at', '<=', now()->subDays(EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY))# delivered_at column has already been gone beyond 1 day
+            ->chunk(100, function ($transactions) use (&$err_count) {
                 foreach ($transactions as $transaction) {
                     try {
                         $buyerId = $transaction->buyerId;
@@ -63,6 +69,6 @@ class TriggerTrustapHandover extends Command
                     }
                 }
             });
-        // info("Trustap Handover(Cron Job) finished at " . now() . ' with ' . $err_count . ' errors');
+        info("Trustap Handover(Cron Job) finished at " . now() . ' with ' . $err_count . ' errors');
     }
 }
