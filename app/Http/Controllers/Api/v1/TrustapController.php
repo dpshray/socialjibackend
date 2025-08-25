@@ -54,6 +54,10 @@ class TrustapController extends Controller
             ]);
 
             $redirectUrl = null;
+            $pricing_empty = $gig->gig_pricing->where('id', $request->pricing_tier)->isEmpty();
+            if ($pricing_empty) {
+                return $this->apiError('pricing does not exists', 404);
+            }
             DB::transaction(function () use(&$redirectUrl, $validated, $gig){
                 $redirectUrl = $this->trustapPaymentGateway->createTransaction($validated, $gig);
             });
@@ -63,6 +67,7 @@ class TrustapController extends Controller
         } catch (TransactionFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Error creating transaction: '.$e->getMessage());
             return $this->apiError('An error occurred while creating the transaction.');
         }
