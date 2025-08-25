@@ -67,6 +67,7 @@ class EntityTrustapTransaction extends Model
     }
 
     public function scopePaymentOverallComplete($query){
-        return $query->where('status',PaymentStatusEnum::HANDOVERED->value)->whereDate('complaintPeriodDeadline','<=',now());
+        return $query->where('status',PaymentStatusEnum::HANDOVERED->value)
+        ->whereDate('complaintPeriodDeadline','<=',now());#already elapsed
     }
 }
