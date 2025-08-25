@@ -16,6 +16,7 @@ class InfluencerCampaignController extends Controller
     public function campaignList(Request $request){
         $per_page = $request->query('per_page',5);
         $pagination = Campaign::with(['tags','media'])
+            ->when($request->filled('search'), fn($qry) => $qry->where('title', 'like', '%'.$request->search.'%'))
             ->latest()
             ->paginate($per_page);
         $data = $this->setupPagination($pagination, fn($item) => CampaignResource::collection($item))->data;

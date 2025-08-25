@@ -43,6 +43,7 @@ class CampaignController extends Controller implements HasMiddleware
         $per_page = $request->query('per_page', 10);
         $pagination = $brand->brandCampaigns()
             ->with(['tags','media'])
+            ->when($request->filled('search'), fn($qry) => $qry->where('title','like', '%'.$request->search.'%'))
             ->latest()
             ->paginate($per_page);
         $data = $this->setupPagination($pagination, fn($item) => CampaignResource::collection($item))->data;
