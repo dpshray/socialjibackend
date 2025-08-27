@@ -8,6 +8,7 @@ use App\Http\Requests\Social\MinimalSocailProfileRequest;
 use App\Http\Resources\Client\Insight\TopBrandInfluencerResource;
 use App\Http\Resources\Social\MinimalSocialProfileRequest;
 use App\Http\Resources\Social\MinimalSocialProfileResource;
+use App\Models\Gig;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,13 +36,32 @@ class DashboardController extends Controller
         $total_reviews_given = $this->getTotalReviewGiven();
         $total_bids = DB::Table('bids')->where('bidder_id', Auth::id())->count();
 
+        #graph
+        $year = now()->format('Y');
+        $no_of_gigs_published_on_current_year = DB::table('gigs')
+            ->selectRaw('MONTH(published_at) as month, COUNT(*) as total')
+            ->whereYear('published_at', $year)
+            ->groupByRaw('MONTH(published_at)')
+            ->orderByRaw('MONTH(published_at)')
+            ->get();
+
+        $campaign_published_on_current_year =  DB::table('campaigns')
+            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+            ->whereYear('created_at', $year)
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
+            ->get();
+
         $data = [
             'social_followers' => $social_followers,
             'top_influencer_with_max_followers_count' => $top_influencer_with_max_followers,
+            'no_of_gigs_published_on_current_year' => $no_of_gigs_published_on_current_year,
+            'campaign_published_on_current_year' => $campaign_published_on_current_year,
             'total_gigs_count' => $total_gigs,
             'total_reviews_received_from_gigs_count' => $total_reviews_received,
             'total_reviews_given_count' => $total_reviews_given,
             'total_bidded_on_campaign_count' => $total_bids,
+
         ];
 
         return $this->apiSuccess('influencer dashboard data', $data);
