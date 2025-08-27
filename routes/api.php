@@ -82,5 +82,9 @@ Route::middleware([JwtMiddleware::class, VerifyEmail::class])->group(function ()
             Route::get('influencer/dashboard', 'influencer');
             Route::get('brand/dashboard', 'brand');
     });
+
+    Route::middleware([InfluencerRole::class])->group(function(){
+        Route::get('infuencer-gig-reviews', [GigController::class, 'fetchAllGigReviews']);
+    });
 });
 

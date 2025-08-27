@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Influencer\Gig\StoreGigRequest;
 use App\Http\Resources\Gig\GigCollection;
 use App\Http\Resources\Gig\GigResource;
+use App\Http\Resources\Review\ReviewResource;
 use App\Http\Resources\Search\GigSearchResource;
 use App\Models\Gig;
 use App\Services\GigService;
@@ -161,4 +162,14 @@ class GigController extends Controller
         $gigs = $gigs->items();
         return $this->apiSuccess('gig list based on tag name(s)',$gigs);
     } */
+   public function fetchAllGigReviews(Request $request){
+        $user = Auth::user();
+        $per_page = $request->query('per_page',10);
+        $user_rating_count = DB::select("SELECT COUNT(*) AS no_of_user_count,rating FROM reviews WHERE gig_id IN (SELECT id FROM gigs WHERE user_id = 3) GROUP BY rating");
+        $paginate = $user->gigReviews()->with(['reviewer.media'])->paginate($per_page);
+        // return ReviewResource::collection($paginate);
+        $review_list = $this->setupPagination($paginate, fn($item) => ReviewResource::collection($item))->data;
+
+        return $this->apiSuccess('fetching review data of all gig', compact('user_rating_count','review_list'));
+   }
 }
