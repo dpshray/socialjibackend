@@ -89,7 +89,8 @@ class CampaignController extends Controller implements HasMiddleware
     public function show(Campaign $campaign)
     {
         // $this->isOwner($campaign);
-        $campaign->loadMissing(['tags','media']);
+        $campaign->loadMissing(['tags','media', 'brand.media']);
+        $campaign = new CampaignResource($campaign);
         return $this->apiSuccess('Campaign detail', $campaign);
     }
 
