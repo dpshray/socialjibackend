@@ -19,7 +19,7 @@ class InfluencerRole
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->user() || ! auth()->user()->hasRole(Constants::ROLE_INFLUENCER)) {
-            return $this->apiError('Forbidden',401);
+            return $this->apiError('only influencer can access this resource',401);
             // return response()->json(['error' => 'Forbidden'], 401);
         }
 
