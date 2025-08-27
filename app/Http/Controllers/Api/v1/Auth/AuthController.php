@@ -10,6 +10,8 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -92,5 +94,25 @@ class AuthController extends Controller
         $user = $user->loadMissing(['gigReviews', 'media', 'socialProfiles.socialSite:id,name,label', 'roles','gigs.media']);
         $data = new UserResource($user);
         return $this->apiSuccess('user profile data', $data);
+    }
+
+    public function patchProfile(Request $request){
+        $user = Auth::user();
+        $data = $request->validate([
+            'first_name' => ['required'],
+            'last_name' => ['required'],
+            'nick_name' => ['required','unique:users,nick_name,'.$user->id],
+            'image' => ['sometimes','image']
+        ]);
+        if ($request->hasFile('image')) {
+            $user->addMedia($request->image)->toMediaCollection(Constants::MEDIA_USER);
+        }
+        $user->update([
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'nick_name' => $nick_name,
+        ] = $data);
+        
+        return $this->apiSuccess("profile updated successfully of nick name : {$user->nick_name}"); 
     }
 }
