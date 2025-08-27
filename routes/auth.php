@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\v1\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Api\v1\Auth\NewPasswordController;
 use App\Http\Controllers\Api\v1\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Api\v1\Auth\VerifyEmailController;
+use App\Http\Middleware\InfluencerRole;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\VerifyEmail;
 use Illuminate\Support\Facades\Route;
@@ -18,9 +19,10 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(AuthController::class)->middleware([JwtMiddleware::class, VerifyEmail::class])->group(function () {
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
-    Route::get('profile', 'userProfile');
+    Route::get('profile', 'userProfile');#fetch logged in user profile
     Route::get('get-user-profile/{user}', 'fetchUserProfile');
     Route::delete('delete-account', 'accountRemover');
+    Route::post('update-profile', 'patchProfile');
 });
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
