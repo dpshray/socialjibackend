@@ -37,7 +37,7 @@ class StoreGigRequest extends FormRequest
             'price' => ['required', 'array'],
             'price.*' => ['sometimes', 'numeric', 'max:99999999'],
             'delivery_time' => ['required', 'array'],
-            'delivery_time.*' => ['sometimes', 'date'],
+            'delivery_time.*' => ['required', 'date_format:d/m/Y'],
             'tier_description' => ['required', 'array'],
             'tier_description.*' => ['sometimes', 'string', 'max:1000'],
             'currency_id' => ['required', 'array'],

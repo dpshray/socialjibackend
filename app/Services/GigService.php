@@ -43,7 +43,7 @@ class GigService
             ->map(fn($data) => [
                 'pricing_tier_id' => $data[0],
                 'price' => $data[1],
-                'delivery_time' => $data[2],
+                'delivery_time' => Carbon::createFromFormat('d/m/Y', $data[2])->startOfDay()->toDateTimeString(),
                 'description' => $data[3],
                 'currency_id' => $data[4],
                 'requirement' => $data[5],
