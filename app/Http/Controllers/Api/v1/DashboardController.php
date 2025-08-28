@@ -43,6 +43,7 @@ class DashboardController extends Controller
             ->whereYear('published_at', $year)
             ->groupByRaw('MONTH(published_at)')
             ->orderByRaw('MONTH(published_at)')
+            ->whereNull('deleted_at')
             ->get();
 
         $campaign_published_on_current_year =  DB::table('campaigns')
@@ -50,7 +51,43 @@ class DashboardController extends Controller
             ->whereYear('created_at', $year)
             ->groupByRaw('MONTH(created_at)')
             ->orderByRaw('MONTH(created_at)')
+            ->whereNull('deleted_at')
             ->get();
+
+        /* $campaign_published_on_current_year = $no_of_gigs_published_on_current_year = [
+            [
+                "month" => 1,
+                "total" => 5000
+            ],
+            [
+                "month" => 2,
+                "total" => 150000
+            ],
+            [
+                "month" => 3,
+                "total" => 20000
+            ],
+            [
+                "month" => 4,
+                "total" => 35000
+            ],
+            [
+                "month" => 5,
+                "total" => 80000
+            ],
+            [
+                "month" => 6,
+                "total" => 65000
+            ],
+            [
+                "month" => 7,
+                "total" => 45000
+            ],
+            [
+                "month" => 8,
+                "total" => 87000
+            ]
+        ]; */
 
         $data = [
             'social_followers' => $social_followers,
