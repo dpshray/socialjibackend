@@ -30,7 +30,7 @@ class StoreGigRequest extends FormRequest
             'features' => ['required'],
             'tag_id' => ['nullable', 'array'],
             'tag_id.*' => ['sometimes', 'integer', Rule::exists('tags', 'id')],
-            'image' => ['nullable', 'image',  'mimes: jpeg,png,jpg', 'max:2048'],
+            'image' => ['nullable', 'image',  'mimes: jpeg,png,jpg', 'max:5125'],
             'status' => ['required', 'boolean'],
             'pricing_tier_id' => ['required', 'array'],
             'pricing_tier_id.*' => ['sometimes', Rule::exists('pricing_tiers', 'id')],
