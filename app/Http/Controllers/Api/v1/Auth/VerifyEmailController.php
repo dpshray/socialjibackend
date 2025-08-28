@@ -31,6 +31,6 @@ class VerifyEmailController extends Controller
             event(new Verified($user));
         }
 
-        return redirect(env('APP_FRONTEND_URL'));
+        return redirect(env('APP_FRONTEND_URL').'login');
     }
 }
