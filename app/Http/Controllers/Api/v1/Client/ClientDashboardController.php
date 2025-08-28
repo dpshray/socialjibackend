@@ -23,6 +23,18 @@ class ClientDashboardController extends Controller
 {
     use PaginationTrait, ResponseTrait;
 
+    public function contactUsFormHandler(Request $request){
+        $form_data = $request->validate([
+            'name' => 'required',
+            'email' => 'required',
+            'subject' => 'required',
+            'message' => 'required',
+            'inquiry_type' => 'required'
+        ]);
+        $form_data['send_at'] = now();
+        DB::table('contact')->insert($form_data);
+        return $this->apiSuccess('form submitted successfully');
+    }
     /*=============================================
     =                  EXPLORER PART              =
     =============================================*/

@@ -42,6 +42,7 @@ Route::prefix('client')->group(function(){
             Route::get('gig-by-month', 'newGigsByMonth');
             Route::get('insight-card', 'insightWidgetInfo');
         });
+        Route::post('contact-us', 'contactUsFormHandler');
     });
 });
 
