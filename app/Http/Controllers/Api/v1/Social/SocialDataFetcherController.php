@@ -23,6 +23,9 @@ class SocialDataFetcherController extends Controller
     {
         // $user = User::find(3); #test
         $user = Auth::user();
+        if (empty($user)) {
+            return $this->apiError('Token not valid', 401);
+        }
         $token = Crypt::encryptString($user->id);
         // dd(base64_encode($token));
         return Socialite::driver('facebook')
