@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Influencer\Gig\StoreGigRequest;
 use App\Http\Resources\Gig\GigCollection;
 use App\Http\Resources\Gig\GigResource;
+use App\Http\Resources\Gig\ShowGigResource;
 use App\Http\Resources\Review\ReviewResource;
 use App\Http\Resources\Search\GigSearchResource;
 use App\Models\Gig;
@@ -74,7 +75,7 @@ class GigController extends Controller
                 'user'
             ])->find($gig->id);
 
-            $data = new GigResource($gig);
+            $data = new ShowGigResource($gig);
             return $this->apiSuccess('gig detail', $data);
         } catch (Throwable $th) {
             Log::error("Error while showing gig id: {$gig->id}. ERROR: " . $th->getMessage());
