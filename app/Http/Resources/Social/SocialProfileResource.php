@@ -15,10 +15,16 @@ class SocialProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         // return parent::toArray($request);
+        $profile_url = match ($this->social_site_id) {
+            1 => asset('assets/img/social/instagram.png'),
+            2 => asset('assets/img/social/facebook.png'),
+            3 => asset('assets/img/social/tik-tok.png'),
+        };
         return [
             // 'id' => $this->id,
             // 'social_site_id' => $this->social_site_id,
-            'profile_url' => $this->profile_url,
+            // 'profile_url' => $this->profile_url,
+            'profile_url' => $profile_url,
             'follower_count' => $this->follower_count,
             'following_count' => $this->following_count,
             'post_count' => $this->post_count,
