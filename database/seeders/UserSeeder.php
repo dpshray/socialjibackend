@@ -17,18 +17,24 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'first_name' => 'admin',
+                'last_name' => 'Admini',
+                'nick_name' => 'Administration',
                 'email' => 'admin@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
             ],
             [
                 'first_name' => 'brand',
+                'last_name' => 'Brando',
+                'nick_name' => 'Bruno',
                 'email' => 'brand@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
             ],
             [
                 'first_name' => 'influencer',
+                'last_name' => 'Inflyencer',
+                'nick_name' => 'InfluEnKo',
                 'email' => 'influencer@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
