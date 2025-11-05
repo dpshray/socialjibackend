@@ -6,8 +6,10 @@ use App\Enums\PaymentStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Client\Explorer\BrandResource;
 use App\Http\Resources\Client\Explorer\InfluencerResource;
+use App\Http\Resources\Client\Explorer\TopSaleNoDataResource;
 use App\Http\Resources\Client\Explorer\TopSaleResource;
 use App\Http\Resources\Client\Insight\TopBrandInfluencerResource;
+use App\Http\Resources\Pricing\PricingCollection;
 use App\Http\Resources\UserResource;
 use App\Models\BrandCategory;
 use App\Models\EntityTrustapTransaction;
@@ -45,7 +47,7 @@ class ClientDashboardController extends Controller
     {
         $per_page = $request->query('per_page', 10);
         $influencers = User::role(Constants::ROLE_INFLUENCER)
-            ->whereHas('socialProfiles')
+            // ->whereHas('socialProfiles')
             ->with(['gigReviews', 'socialProfiles.socialSite', 'media', 'gigs'])
             ->withCount('gigs')
             ->select('users.*')
@@ -68,7 +70,7 @@ class ClientDashboardController extends Controller
     {
         $per_page = $request->query('per_page', 10);
         $brand    = User::role(Constants::ROLE_BRAND)
-            ->whereHas('socialProfiles')
+            // ->whereHas('socialProfiles')
             ->with(['media', 'socialProfiles.socialSite', 'brandCategory', 'brandRatings'])
             ->select('users.*')
             ->selectSub(function ($query) {
@@ -86,18 +88,30 @@ class ClientDashboardController extends Controller
     public function topSalesExplorer(Request $request)
     {
         $per_page  = $request->query('per_page', 10);
-        $top_sales = EntityTrustapTransaction::join('gigs', 'gigs.id', '=', 'entity_trustap_transactions.gig_id')
-            ->selectRaw('COUNT(entity_trustap_transactions.gig_id) as total_sold, entity_trustap_transactions.gig_id, gigs.title')
-            ->groupBy('entity_trustap_transactions.gig_id', 'gigs.title')
-            ->with(['gig' => ['media', 'gig_pricing']])
-            ->where(function ($qry) {
-                return $qry->where('entity_trustap_transactions.status', PaymentStatusEnum::HANDOVERED->value);
-            })
-            ->whereDate('complaintPeriodDeadline', '<=', now())
-            ->orderBy('total_sold', 'DESC')
-            ->take($per_page)
-            ->get();
-        $top_sales = TopSaleResource::collection($top_sales);
+
+        $data_exists = DB::table('entity_trustap_transactions')
+            ->where('status', PaymentStatusEnum::HANDOVERED->value)
+            ->whereDate('complaintPeriodDeadline', '<=', now())->exists();
+        if ($data_exists) {
+            $top_sales = EntityTrustapTransaction::join('gigs', 'gigs.id', '=', 'entity_trustap_transactions.gig_id')
+                ->selectRaw('COUNT(entity_trustap_transactions.gig_id) as total_sold, entity_trustap_transactions.gig_id, gigs.title')
+                ->groupBy('entity_trustap_transactions.gig_id', 'gigs.title')
+                ->with(['gig' => ['media', 'gig_pricing']])
+                ->where(function ($qry) {
+                    return $qry->where('entity_trustap_transactions.status', PaymentStatusEnum::HANDOVERED->value);
+                })
+                ->whereDate('complaintPeriodDeadline', '<=', now())
+                ->orderBy('total_sold', 'DESC')
+                ->take($per_page)
+                ->get();
+            $top_sales = TopSaleResource::collection($top_sales);
+        }else{
+            $top_sales = Gig::with(['media', 'gig_pricing'])
+                ->latest()
+                ->take($per_page)
+                ->get();
+            $top_sales = TopSaleNoDataResource::collection($top_sales);
+        }
         return $this->apiSuccess('top sales explorer data', $top_sales);
     }
 
