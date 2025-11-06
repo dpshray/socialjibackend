@@ -23,18 +23,24 @@ class CampaignEntityTrustapTransaction extends Model
         'claimedBySeller',
         'claimedByBuyer',
         'complaintPeriodDeadline',
-        'bid_id'
+        'bid_id',
+        'delivered_at'
     ];
 
-    function buyer() { #INFLUENCER
-        return $this->belongsTo(User::class,'bidder_id');
-    }
-
-    function campaign() {
-        return $this->belongsTo(Campaign::class,'campaign_id');
+    protected function casts(): array
+    {
+        return [
+            'complaintPeriodDeadline' => 'datetime',
+            'delivered_at' => 'datetime',
+        ];
     }
 
     function bid() {
         return $this->belongsTo(Bid::class);
+    }
+
+    public function campaign()
+    {
+        return $this->hasOneThrough(Campaign::class,Bid::class,'id','id','bid_id','campaign_id');
     }
 }

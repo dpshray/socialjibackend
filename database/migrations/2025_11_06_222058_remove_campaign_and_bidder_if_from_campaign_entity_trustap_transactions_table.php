@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('entity_trustap_transactions', function (Blueprint $table) {
-            $table->string('project_type')->nullable()->after('id');
-        });
+        Schema::table('campaign_entity_trustap_transactions', function (Blueprint $table) {
+            $table->dropForeign(['campaign_id']);
+            $table->dropForeign(['bidder_id']);
+            $table->dropColumn(['campaign_id', 'bidder_id']);});
     }
 
     /**
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('entity_trustap_transactions', function (Blueprint $table) {
-            $table->dropColumn('project_type');
+        Schema::table('campaign_entity_trustap_transactions', function (Blueprint $table) {
+            //
         });
     }
 };

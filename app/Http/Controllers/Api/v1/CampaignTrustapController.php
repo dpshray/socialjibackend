@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\PaymentStatusEnum;
 use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Payment\CampaignPaymentCollection;
+use App\Http\Resources\Payment\Campaign\CampaignInfluencerPaymentCollection;
+use App\Http\Resources\Payment\Campaign\CampaignPaymentCollection;
 use App\Http\Resources\Payment\CampaignPaymentResource;
 use App\Models\Bid;
 use App\Models\Campaign;
@@ -47,8 +48,15 @@ class CampaignTrustapController extends Controller
                 'description' => ['required', 'string', 'max:255'],
             ]);
             if (!$bid->is_selected) {
-                return $this->apiError('Bid is not selected for campaign.',422);
+                return $this->apiError("Bid is not marked as 'selected' for campaign.",422);
             }
+            /* $already_paid = CampaignEntityTrustapTransaction::where([
+                ['bid_id', $bid->id],
+                ['status',PaymentStatusEnum::AMOUNT_PAID->value]
+            ])->exists();
+            if ($already_paid) {
+                return $this->apiError('this bid has already been processed.',422);
+            } */
             $redirectUrl = null;
             DB::transaction(function () use (&$redirectUrl, $validated, $bid) {
                 $redirectUrl = $this->trustapPaymentGateway->createTransaction($validated, $bid);
@@ -75,7 +83,7 @@ class CampaignTrustapController extends Controller
             Log::info($e);
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
-            Log::error('An error occurred during payment callback: ' . $e->getMessage());
+            Log::error('An error occurred during payment callback: ' . $e);
             return $this->apiError('An error occurred during payment processing.');
         }
     }
@@ -93,10 +101,30 @@ class CampaignTrustapController extends Controller
         }
     }
 
-    public function buyerConfirmsHandover(Request $request, EntityTrustapTransaction $entityTrustapTransaction)
+    public function confirmDelivery(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
+    {
+        // $this->isOwner($campaignEntityTrustapTransaction);
+        if (Auth::id() != $campaignEntityTrustapTransaction->bid->bidder_id) {
+            throw new ForbiddenItemAccessException();
+        }
+        /* if (!empty($campaignEntityTrustapTransaction->complaintPeriodDeadline)) {
+            return $this->apiError('item has already been delivered',409);
+        } */
+        if ($campaignEntityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
+            return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
+        }
+        $campaignEntityTrustapTransaction->update([
+            'status' => PaymentStatusEnum::DELIVERED->value,
+            'delivered_at' => now(),
+            'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
+        ]);
+        return $this->apiSuccess('item status changed to : delivered');
+    }
+
+    public function buyerConfirmsHandover(Request $request, CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
     {
         try {
-            $response = $this->trustapPaymentGateway->buyerConfirmsHandover($entityTrustapTransaction);
+            $response = $this->trustapPaymentGateway->buyerConfirmsHandover($campaignEntityTrustapTransaction);
             return $this->apiSuccess('Handover confirmed successfully.');
         } catch (PaymentFailedException $e) {
             return $this->apiSuccess($e->getMessage());
@@ -106,13 +134,13 @@ class CampaignTrustapController extends Controller
         }
     }
 
-    public function buyerSubmitComplaint(Request $request, EntityTrustapTransaction $entityTrustapTransaction)
+    public function buyerSubmitComplaint(Request $request, CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
     {
         $validated = $request->validate([
             'complaint' => ['required', 'string', 'max:500'],
         ]);
         try {
-            $response = $this->trustapPaymentGateway->buyerSubmitComplaint($entityTrustapTransaction, $validated['complaint']);
+            $response = $this->trustapPaymentGateway->buyerSubmitComplaint($campaignEntityTrustapTransaction, $validated['complaint']);
             return $this->apiSuccess('Complaint submitted successfully.');
         } catch (PaymentFailedException $e) {
             return $this->apiError($e->getMessage());
@@ -136,23 +164,6 @@ class CampaignTrustapController extends Controller
         }
     }
 
-    public function confirmDelivery(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
-    {
-        $this->isOwner($campaignEntityTrustapTransaction);
-        /* if (!empty($campaignEntityTrustapTransaction->complaintPeriodDeadline)) {
-            return $this->apiError('item has already been delivered',409);
-        } */
-        if ($campaignEntityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
-            return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
-        }
-        $campaignEntityTrustapTransaction->update([
-            'status' => PaymentStatusEnum::DELIVERED->value,
-            'delivered_at' => now(),
-            'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
-        ]);
-        return $this->apiSuccess('item status changed to : delivered');
-    }
-
     public function isOwner(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
     {
         if ($campaignEntityTrustapTransaction->seller->isNot(Auth::user())) {
@@ -161,7 +172,6 @@ class CampaignTrustapController extends Controller
     }
 
     function getAssignedBidderList(Request $request) {
-        // return 'here';
         $per_page = $request->query('per_page');
         $pagination = CampaignEntityTrustapTransaction::with(['bid.bidder', 'bid.campaign'])
             ->whereRelation('campaign','brand_id',Auth::id())
@@ -169,5 +179,15 @@ class CampaignTrustapController extends Controller
             ->paginate($per_page);
         $campaign = $this->setupPagination($pagination, CampaignPaymentCollection::class)->data;
         return $this->apiSuccess('List of all influencer bids', $campaign);
+    }
+
+    function fetchBidStatus(Request $request) {
+        $per_page = $request->query('per_page');
+        $pagination = CampaignEntityTrustapTransaction::with(['bid.campaign.brand'])
+            ->whereRelation('bid', 'bidder_id', Auth::id())
+            ->where('status', '<>', PaymentStatusEnum::TXN_INIT->value)
+            ->paginate($per_page);
+        $bids = $this->setupPagination($pagination, CampaignInfluencerPaymentCollection::class)->data;
+        return $this->apiSuccess('List of all influencer bids', $bids);
     }
 }

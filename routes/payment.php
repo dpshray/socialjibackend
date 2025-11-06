@@ -46,9 +46,13 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                 Route::middleware(BrandRole::class)->group(function(){
                     Route::get('fetch-transaction-list', 'getAssignedBidderList');
                     Route::post('create_transaction/{bid}', 'createTransaction');
+                    Route::post('buyer-confirms-handover/{campaignEntityTrustapTransaction}', 'buyerConfirmsHandover');
+                    Route::post('buyer-submit-complaint/{campaignEntityTrustapTransaction}', 'buyerSubmitComplaint');
                 });
                 Route::middleware(InfluencerRole::class)->group(function(){
                     Route::post('bidder-accept-deposit/{campaignEntityTrustapTransaction}', 'bidderAcceptDeposit');
+                    Route::get('item-delivery-confirmation/{campaignEntityTrustapTransaction}', 'confirmDelivery');
+                    Route::get('get-bids-status', 'fetchBidStatus');
                 });
             });
 

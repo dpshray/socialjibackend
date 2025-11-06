@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\PaymentStatusEnum;
+use App\Models\CampaignEntityTrustapTransaction;
 use App\Models\EntityTrustapTransaction;
 use App\Services\v1\Payment\TrustapPaymentGateway;
 use Illuminate\Console\Command;
@@ -31,6 +32,9 @@ class TriggerTrustapHandover extends Command
     public function handle()
     {
         info("Trustap Handover(Cron Job) running at " . now());
+        /*=============================================
+        =                      Gig                   =
+        =============================================*/
         $err_count = 0;
         EntityTrustapTransaction::where('status', PaymentStatusEnum::DELIVERED->value)
             /**
@@ -60,6 +64,49 @@ class TriggerTrustapHandover extends Command
                                     'error' => json_decode($response->body()),
                                 ]);                                
                             }
+                    } catch (\Exception $e) {
+                        Log::channel('payment')->error('Failed to confirm handover', [
+                            'transaction_id' => $transaction->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $err_count++;
+                    }
+                }
+            });
+
+
+        /*=============================================
+        =                   Campaign                  =
+        =============================================*/
+
+        CampaignEntityTrustapTransaction::where('status', PaymentStatusEnum::DELIVERED->value)
+            /**
+             * Say delivered_at id 2025-08-25 11:00:00 
+             * then in 2025-08-25 11:00:00 <= 2025-08-26 10:00:00(false)
+             * then in 2025-08-25 11:00:00 <= 2025-08-26 11:00:00(true)
+             *
+             */
+            ->where('delivered_at', '<=', now()->subDays(EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY)) # delivered_at column has already been gone beyond 1 day
+            ->chunk(100, function ($transactions) use (&$err_count) {
+                foreach ($transactions as $transaction) {
+                    try {
+                        $buyerId = $transaction->buyerId;
+                        $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
+                            ->withHeaders([
+                                'Content-Type' => 'application/json',
+                                'Trustap-User' => $buyerId,
+                            ])
+                            ->post(config('services.trustap.url') . "/p2p/transactions/$transaction->transactionId/confirm_handover_with_guest_user");
+                        if ($response->successful()) {
+                            $transaction->update([
+                                'status' => PaymentStatusEnum::HANDOVERED->value,
+                            ]);
+                        } else {
+                            Log::channel('payment')->error('Failed to confirm handover', [
+                                'transaction_id' => $transaction->id,
+                                'error' => json_decode($response->body()),
+                            ]);
+                        }
                     } catch (\Exception $e) {
                         Log::channel('payment')->error('Failed to confirm handover', [
                             'transaction_id' => $transaction->id,

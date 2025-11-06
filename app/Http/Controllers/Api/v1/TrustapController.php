@@ -101,6 +101,23 @@ class TrustapController extends Controller
             return $this->apiError('An error occurred while accepting the deposit: ');
         }
     }
+    
+    public function confirmDelivery(EntityTrustapTransaction $entityTrustapTransaction)
+    {
+        $this->isOwner($entityTrustapTransaction);
+        /* if (!empty($entityTrustapTransaction->complaintPeriodDeadline)) {
+            return $this->apiError('item has already been delivered',409);
+        } */
+        if ($entityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
+            return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
+        }
+        $entityTrustapTransaction->update([
+            'status' => PaymentStatusEnum::DELIVERED->value,
+            'delivered_at' => now(),
+            'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
+        ]);
+        return $this->apiSuccess('item status changed to : delivered');
+    }
 
     public function buyerConfirmsHandover(Request $request, EntityTrustapTransaction $entityTrustapTransaction)
     {
@@ -181,22 +198,6 @@ class TrustapController extends Controller
 
         $transactions = $this->setupPagination($pagination, fn($items) => InfluencerPaymentResource::collection($items))->data;
         return $this->apiSuccess('user(influencer) transactions ', $transactions);
-    }
-
-    public function confirmDelivery(EntityTrustapTransaction $entityTrustapTransaction){
-        $this->isOwner($entityTrustapTransaction);
-        /* if (!empty($entityTrustapTransaction->complaintPeriodDeadline)) {
-            return $this->apiError('item has already been delivered',409);
-        } */
-        if ($entityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
-            return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
-        }
-        $entityTrustapTransaction->update([
-            'status' => PaymentStatusEnum::DELIVERED->value,
-            'delivered_at' => now(),
-            'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
-        ]);
-        return $this->apiSuccess('item status changed to : delivered');
     }
 
     public function isOwner(EntityTrustapTransaction $entityTrustapTransaction){

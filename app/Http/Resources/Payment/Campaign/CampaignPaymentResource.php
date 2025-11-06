@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Payment;
+namespace App\Http\Resources\Payment\Campaign;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,6 +16,7 @@ class CampaignPaymentResource extends JsonResource
     {
         // return parent::toArray($request);
         return [
+            'payment_id' => (int) $this->id,
             'bid_id' => (int)$this->bid->id,
             'price' => (float) $this->price,
             'campaign_name' => $this->campaign->title,

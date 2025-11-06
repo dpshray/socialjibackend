@@ -279,6 +279,7 @@ class TrustapPaymentGateway
 
     public function buyerSubmitComplaint(EntityTrustapTransaction $entityTrustapTransaction, $complaint)
     {
+        $hour_to_wait = EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY * 24;
         if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to submit complaint on this transaction.');
         }
@@ -288,8 +289,7 @@ class TrustapPaymentGateway
         elseif ($entityTrustapTransaction->status != PaymentStatusEnum::HANDOVERED->value) {
             throw new \Exception("complain can only be possible after item has been delivered");
         }
-        elseif ($entityTrustapTransaction->delivered_at->lt(now())) {
-            $hour_to_wait = EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY * 24;
+        elseif (!$entityTrustapTransaction->delivered_at->addHours($hour_to_wait)->isPast()) {
             throw new \Exception('please wait for '. $hour_to_wait.' hour after delivery time to make a complain for this item');
         }
         elseif ($entityTrustapTransaction->delivered_at->gte(now())) {

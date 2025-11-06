@@ -99,9 +99,13 @@ class CampaignTrustapPaymentGateway
         if (Auth::user()->isInfluencer()) {
             throw new TransactionFailedException('Influencer cannot create transactions.');
         }
-        $buyerId = $bid->bidder->userTrustapMetadata->trustap_user_id;#guestUserId
-        $sellerId = $bid->campaign->brand->userTrustapMetadata->trustapGuestUserId;
-        if (! $buyerId || ! $sellerId) {
+        $payer = $bid->campaign->brand->userTrustapMetadata->trustap_user_id; #BRAND
+        $receiver = $bid->bidder->userTrustapMetadata->trustapGuestUserId; #guestUserId INFLUENCER
+        /* Log::info([
+            'buyerId' => $bid->bidder->userTrustapMetadata->trustap_user_id,
+            'receiver' => $bid->campaign->brand->userTrustapMetadata->trustapGuestUserId
+        ]); */
+        if (! $payer || ! $receiver) {
             throw new Exception('Buyer or Seller Trustap user not found.');
         }
         $bid_campaign = $bid->campaign;
@@ -116,12 +120,11 @@ class CampaignTrustapPaymentGateway
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => $buyerId,
+                'Trustap-User' => $receiver,
             ])
-            ->post(config('services.trustap.url').'/p2p/me/transactions/create_with_guest_user', [
-                'seller_id' => $sellerId,
-                'buyer_id' => $buyerId,
-                // 'creator_role' => $data['role'],
+            ->post(config('services.trustap.url'). '/p2p/me/transactions/create_with_guest_user', [
+                'buyer_id' => $payer,
+                'seller_id' => $receiver,
                 'creator_role' => 'seller',
                 'currency' => $currency_code,
                 'description' => $data['description'],
@@ -136,17 +139,14 @@ class CampaignTrustapPaymentGateway
             logError(__METHOD__, func_get_args(), $response, 'Failed to create transaction.');
             throw new Exception('Failed to create transaction: '.$response['error']);
         }
-        // Log::debug('createTransaction : ',$response);
+        // Log::info('createTransaction : ',$response);
         $transaction = CampaignEntityTrustapTransaction::create([
-            'campaign_id' => $bid_campaign->id,
-            'bidder_id' => $bid->bidder_id,
             'bid_id' => $bid->id,
-            // 'gig_pricing_id' => $gigPricing->pivot->id,
             'campaign_title' => $bid_campaign->title,
             'transactionId' => $response['id'],
             'transactionType' => 'f2f', // or set as needed
-            'sellerId' => $response['seller_id'],
-            'buyerId' => $response['buyer_id'],
+            'sellerId' => $response['buyer_id'],
+            'buyerId' => $response['seller_id'],
             // 'status' => $response['status'],
             'status' => PaymentStatusEnum::TXN_INIT->value,
             'price' => (int) $response['deposit_pricing']['price'] / 100,# converting back form cent
@@ -161,7 +161,7 @@ class CampaignTrustapPaymentGateway
     public function paymentSuccess(array $data)
     {
         $transaction = CampaignEntityTrustapTransaction::where('transactionId', $data['tx_id'])->firstOrFail();
-        $data['user_id'] = $transaction->buyer->id; 
+        $data['user_id'] = $transaction->bid->campaign->brand->id; 
         if ($data['trustap_status'] !== 'ok') {
             logError(__METHOD__, func_get_args(), $data, 'Payment Failed.');
             throw new PaymentFailedException('Payment failed. Please try again.');
@@ -180,6 +180,9 @@ class CampaignTrustapPaymentGateway
     {
         $user_trustap_meta_data = Auth::user()->userTrustapMetadata;
         $bidder_id = $user_trustap_meta_data->trustapGuestUserId; 
+        Log::info([
+            $bidder_id , $entityTrustapTransaction->buyerId
+        ]);
         if ($bidder_id != $entityTrustapTransaction->buyerId) {
             throw new PaymentFailedException('You are not authorized to accept this deposit.');
         }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
@@ -191,7 +194,7 @@ class CampaignTrustapPaymentGateway
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => '1-29aa848b-7a0b-4095-9973-13041dfee2d7',
+                'Trustap-User' => $bidder_id,
             ])
             ->post(config('services.trustap.url')."/p2p/transactions/$entityTrustapTransaction->transactionId/accept_deposit_with_guest_seller");
 
@@ -202,32 +205,32 @@ class CampaignTrustapPaymentGateway
             throw new PaymentFailedException('Failed to accept deposit: ');
         }
         // Log::debug('sellerAcceptDeposit : ', $response);
-
-        logInfo(__METHOD__, func_get_args(), $response, 'Seller Accept Deposit Successfully.');
-
         return $entityTrustapTransaction->update([
             'status' => PaymentStatusEnum::DEPOSIT_ACCEPTED->value,
         ]);
 
+        logInfo(__METHOD__, func_get_args(), $response, 'Seller Accept Deposit Successfully.');
+
+
     }
 
-    public function buyerConfirmsHandover(EntityTrustapTransaction $entityTrustapTransaction)
+    public function buyerConfirmsHandover(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
     {
-        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $campaignEntityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to confirm the handover.');
-        }elseif ($entityTrustapTransaction->status == PaymentStatusEnum::HANDOVERED->value) {
+        }elseif ($campaignEntityTrustapTransaction->status == PaymentStatusEnum::HANDOVERED->value) {
             throw new PaymentFailedException('item is already handovered.');
-        } elseif ($entityTrustapTransaction->status != PaymentStatusEnum::DELIVERED->value) {
+        } elseif ($campaignEntityTrustapTransaction->status != PaymentStatusEnum::DELIVERED->value) {
             throw new \Exception("could not change payment status(status can only be changed after amount has been delivered)");
         }
 
-        $buyerId = Auth::user()->userTrustapMetadata->trustap_user_id;
+        $sellerId = Auth::user()->userTrustapMetadata->trustap_user_id;
         $response = Http::withBasicAuth(config('services.trustap.api_key'), '')
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                'Trustap-User' => $buyerId,
+                'Trustap-User' => $sellerId,
             ])
-            ->post(config('services.trustap.url')."/p2p/transactions/$entityTrustapTransaction->transactionId/confirm_handover_with_guest_user");
+            ->post(config('services.trustap.url')."/p2p/transactions/$campaignEntityTrustapTransaction->transactionId/confirm_handover_with_guest_user");
 
         $response = $response->json();
             
@@ -238,28 +241,28 @@ class CampaignTrustapPaymentGateway
         // Log::debug('buyerConfirmsHandover : ', $response);
         logInfo(__METHOD__, func_get_args(), $response, 'Buyer Confirms Handover Successfully.');
 
-        return $entityTrustapTransaction->update([
+        return $campaignEntityTrustapTransaction->update([
             'status' => PaymentStatusEnum::HANDOVERED->value,
         ]);
 
     }
 
-    public function buyerSubmitComplaint(EntityTrustapTransaction $entityTrustapTransaction, $complaint)
+    public function buyerSubmitComplaint(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction, $complaint)
     {
-        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $entityTrustapTransaction->buyerId) {
+        $hour_to_wait = EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY * 24;
+        if (Auth::user()->userTrustapMetadata->trustapGuestUserId != $campaignEntityTrustapTransaction->sellerId) {
             throw new PaymentFailedException('You are not authorized to submit complaint on this transaction.');
         }
-        elseif ($entityTrustapTransaction->status == PaymentStatusEnum::COMPLAINED->value) {
+        elseif ($campaignEntityTrustapTransaction->status == PaymentStatusEnum::COMPLAINED->value) {
             throw new \Exception("item has already been complained");
         }
-        elseif ($entityTrustapTransaction->status != PaymentStatusEnum::HANDOVERED->value) {
+        elseif ($campaignEntityTrustapTransaction->status != PaymentStatusEnum::HANDOVERED->value) {
             throw new \Exception("complain can only be possible after item has been delivered");
         }
-        elseif ($entityTrustapTransaction->delivered_at->lt(now())) {
-            $hour_to_wait = EntityTrustapTransaction::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY * 24;
+        elseif (!$campaignEntityTrustapTransaction->delivered_at->addHours($hour_to_wait)->isPast()) {
             throw new \Exception('please wait for '. $hour_to_wait.' hour after delivery time to make a complain for this item');
         }
-        elseif ($entityTrustapTransaction->delivered_at->gte(now())) {
+        elseif ($campaignEntityTrustapTransaction->complaintPeriodDeadline->lte(now())) {
             throw new PaymentFailedException('Complaint period has already been expired.');            
         }
 
@@ -270,7 +273,7 @@ class CampaignTrustapPaymentGateway
                 'Content-Type' => 'application/json',
                 'Trustap-User' => $buyerId,
             ])
-            ->post(config('services.trustap.url')."/p2p/transactions/{$entityTrustapTransaction->transactionId}/complain_with_guest_buyer", [
+            ->post(config('services.trustap.url')."/p2p/transactions/{$campaignEntityTrustapTransaction->transactionId}/complain_with_guest_buyer", [
                 'description' => $complaint,
             ]);
 
@@ -283,8 +286,8 @@ class CampaignTrustapPaymentGateway
 
         logInfo(__METHOD__, func_get_args(), $data, 'Complaint submitted successfully');
 
-        return $entityTrustapTransaction->update([
-            'status' => PaymentStatusEnum::COMPLAINED->value ?? $entityTrustapTransaction->status,
+        return $campaignEntityTrustapTransaction->update([
+            'status' => PaymentStatusEnum::COMPLAINED->value ?? $campaignEntityTrustapTransaction->status,
         ]);
     }
 
