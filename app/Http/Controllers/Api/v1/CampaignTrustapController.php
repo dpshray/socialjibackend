@@ -138,14 +138,14 @@ class CampaignTrustapController extends Controller
 
     public function confirmDelivery(CampaignEntityTrustapTransaction $campaignEntityTrustapTransaction)
     {
-        $this->isOwner($$campaignEntityTrustapTransaction);
-        /* if (!empty($$campaignEntityTrustapTransaction->complaintPeriodDeadline)) {
+        $this->isOwner($campaignEntityTrustapTransaction);
+        /* if (!empty($campaignEntityTrustapTransaction->complaintPeriodDeadline)) {
             return $this->apiError('item has already been delivered',409);
         } */
-        if ($$campaignEntityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
+        if ($campaignEntityTrustapTransaction->status != PaymentStatusEnum::DEPOSIT_ACCEPTED->value) {
             return $this->apiError("could not change payment status(status can only be changed after deposit has been accepted)");
         }
-        $$campaignEntityTrustapTransaction->update([
+        $campaignEntityTrustapTransaction->update([
             'status' => PaymentStatusEnum::DELIVERED->value,
             'delivered_at' => now(),
             'complaintPeriodDeadline' => now()->addDays(EntityTrustapTransaction::COMPLAIN_PERIOD_DEADLINE)
