@@ -8,6 +8,7 @@ use App\Traits\PaginationTrait;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
 use App\Models\Campaign;
+use Illuminate\Support\Facades\Auth;
 
 class InfluencerCampaignController extends Controller
 {
@@ -16,6 +17,7 @@ class InfluencerCampaignController extends Controller
     public function campaignList(Request $request){
         $per_page = $request->query('per_page',5);
         $pagination = Campaign::with(['tags','media'])
+            ->withCount(['bids' => fn($qry) => $qry->where(['is_selected' => true], ['bidder_id' => Auth::id()])])
             ->when($request->filled('search'), fn($qry) => $qry->where('title', 'like', '%'.$request->search.'%'))
             ->latest()
             ->paginate($per_page);

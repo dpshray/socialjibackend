@@ -24,6 +24,7 @@ Route::middleware([
         Route::middleware(BrandRole::class)->group(function(){
             Route::get('campaign-bidders/{campaign}', [CampaignController::class, 'campaignBidderList']);
             Route::post('update-campaign/{campaign}', [CampaignController::class,'update']);
+            Route::get('/bids/{bid}/toggle-assignment', [CampaignController::class, 'toggleBidAssignment']);
         });
         Route::apiResource('campaign', CampaignController::class)->except(['update']);
 });

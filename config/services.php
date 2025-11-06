@@ -55,6 +55,20 @@ return [
         'full_user_success_redirection_url_to_site' => env('FULL_USER_SUCCESS_REDIRECTION_URL'),
         'payment_success_redirection_url_to_site' => env('PAYMENT_SUCCESS_REDIRECTION_URL')
     ],
+    
+    'campaign_trustap' => [
+        'url' => env('TRUSTAP_URL'),
+        'client_id' => env('TRUSTAP_CLIENT_ID'),
+        'client_secret' => env('TRUSTAP_CLIENT_SECRET'),
+        'api_key' => env('TRUSTAP_API_KEY'),
+        'payment_action' => env('TRUSTAP_BUYER_PAYMENT_ACTION'),
+        'payment_callback_uri' => env('CAMPAIGN_TRUSTAP_PAYMENT_CALLBACK_URI'),
+        'sso_url' => env('TRUSTAP_SSO_URL'),
+        'auth_redirect_url' => env('TRUSTAP_AUTH_REDIRECT_URI'),
+        #redirection
+        'full_user_success_redirection_url_to_site' => env('FULL_USER_SUCCESS_REDIRECTION_URL'),
+        'payment_success_redirection_url_to_site' => env('PAYMENT_SUCCESS_REDIRECTION_URL')
+    ],
 
     'frontend' => [
         'url' => env('APP_FRONTEND_URL', 'https://frontend.stage.dworklabs.com/'),

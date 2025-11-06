@@ -18,6 +18,7 @@ class Campaign extends Model implements HasMedia
         "eligibility",
         "requirement",
         "price",
+        "currency_id",
         "image"
     ];
 
@@ -31,6 +32,10 @@ class Campaign extends Model implements HasMedia
 
     public function brand(){
         return $this->belongsTo(User::class);
+    }
+
+    function currency() {
+        return $this->belongsTo(Currency::class);
     }
 
     public function registerMediaCollections(): void

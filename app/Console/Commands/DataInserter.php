@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Constants\Constants;
-use App\Models\Gig;
 use App\Models\User;
+use App\Models\Gig;
 use App\Services\GigService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +15,7 @@ class DataInserter extends Command
 {
     protected $signature = 'data:inserter';
     protected $description = 'Insert fake influencer and brand users with related data';
+
     protected $guestUserId = [
         "1-29aa848b-7a0b-4095-9973-13041dfee2d7",
         "1-4ad47ebf-a286-44c9-bf60-6fc005e28243",
@@ -30,35 +31,34 @@ class DataInserter extends Command
 
     public function handle()
     {
-        $this->insertUser(true);   // Insert influencers
-        $this->insertUser(false);  // Insert brands
+        // You can toggle influencer/brand inserts
+        $this->insertUser(true);  // Insert influencers
+        $this->insertUser(true); // Insert brands
     }
 
     private function insertUser(bool $is_influencer = true)
     {
-
         foreach ($this->guestUserId as $key => $id) {
             try {
-                // Create user
+                // 🧩 Create user
                 $user = User::create([
                     'first_name' => fake()->firstName(),
                     'middle_name' => fake()->firstName(),
                     'last_name' => fake()->lastName(),
                     'nick_name' => fake()->userName() . rand(1, 1000),
                     'email' => fake()->unique()->safeEmail(),
-                    'email_verified_at' => fake()->dateTimeBetween('-1 year'),
+                    'email_verified_at' => fake()->dateTimeBetween('-1 year')->format('Y-m-d H:i:s'),
                     'password' => Hash::make('password'),
                     'remember_token' => str()->random(10),
                     'about' => fake()->text()
                 ]);
-                clone($user)->userTrustapMetadata()->create([
+
+                clone ($user)->userTrustapMetadata()->create([
                     "trustapGuestUserId" => $id
                 ]);
 
-                // $this->info("[$key/count($this->guestUserId)] ✔ User created");
-
+                // 🧩 Social profiles
                 if ($is_influencer) {
-                    // Insert social profiles
                     $socialProfiles = [];
                     for ($k = 1; $k <= 3; $k++) {
                         $socialProfiles[] = [
@@ -78,12 +78,12 @@ class DataInserter extends Command
                     DB::table('social_profiles')->insert($socialProfiles);
                     $this->info("✔ Social profiles inserted for user ID: {$user->id}");
 
-                    // Insert Gigs
+                    // 🧩 Insert Gigs
                     $total_gigs = 10;
                     $gigService = new GigService;
 
                     for ($i = 1; $i <= $total_gigs; $i++) {
-                        // Insert tags
+                        // Tags
                         $tags = collect(fake()->words(rand(5, 10)))
                             ->map(fn($tag) => [
                                 'user_id' => $user->id,
@@ -93,7 +93,7 @@ class DataInserter extends Command
                         DB::table('tags')->insert($tags);
                         $this->info("✔ Inserted " . count($tags) . " tags");
 
-                        // Create gig
+                        // Gig
                         $gig = Gig::create([
                             "user_id" => $user->id,
                             "title" => fake()->catchPhrase(),
@@ -102,10 +102,10 @@ class DataInserter extends Command
                             "requirements" => fake()->sentence(),
                             "features" => fake()->sentence(),
                             "status" => 1,
-                            "published_at" => fake()->dateTimeBetween('-1 year')
+                            "published_at" => fake()->dateTimeBetween('-1 year')->format('Y-m-d H:i:s'),
                         ]);
 
-                        // Assign pricing tiers using service
+                        // 🧩 Pricing tiers
                         $gigService->form_data = [
                             "pricing_tier_id" => ["1", "2", "3"],
                             "price" => [
@@ -113,9 +113,13 @@ class DataInserter extends Command
                                 fake()->numberBetween(5000, 10000),
                                 fake()->numberBetween(100000, 300000),
                             ],
-                            "delivery_time" => [fake()->dateTimeBetween('-1 year'), fake()->dateTimeBetween('-1 year'), fake()->dateTimeBetween('-1 year')],
+                            "delivery_time" => [
+                                fake()->dateTimeBetween('-1 year')->format('Y-m-d H:i:s'),
+                                fake()->dateTimeBetween('-1 year')->format('Y-m-d H:i:s'),
+                                fake()->dateTimeBetween('-1 year')->format('Y-m-d H:i:s')
+                            ],
                             "tier_description" => [fake()->text(), fake()->text(), fake()->text()],
-                            "currency_id" => [rand(1,3), rand(1,3), rand(1,3)],
+                            "currency_id" => [rand(1, 3), rand(1, 3), rand(1, 3)],
                             "tier_requirement" => [fake()->text(), fake()->text(), fake()->text()],
                         ];
 
@@ -123,19 +127,16 @@ class DataInserter extends Command
                         $this->info("[$i/$total_gigs] ✔ Gig created: {$gig->title}");
                     }
 
-                    // Assign role
+                    // 🧩 Assign Role
                     $user->assignRole(Constants::ROLE_INFLUENCER);
                 } else {
                     $user->assignRole(Constants::ROLE_BRAND);
                 }
             } catch (\Throwable $e) {
-                Log::error("User Insert Error: " . $e->getMessage());
+                Log::error("User Insert Error: " . $e);
                 $this->error("❌ Error inserting user: " . $e->getMessage());
             }
-        
         }
-        // $total_user = count($gurestUserId);
-        // for ($x = 1; $x <= $total_user; $x++) {}
 
         $this->info("✔ All " . ($is_influencer ? 'influencers' : 'brands') . " inserted successfully.");
     }

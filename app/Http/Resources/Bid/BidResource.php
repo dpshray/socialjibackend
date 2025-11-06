@@ -20,6 +20,7 @@ class BidResource extends JsonResource
             "campaign_id" => $this->campaign_id,
             "detail" => $this->detail,
             "bid" => $this->bid,
+            "is_assigned" => (boolean) $this->is_selected,
             "bidder" => new UserResource($this->whenLoaded('bidder'))
         ];
     }

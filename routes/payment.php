@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CampaignTrustapController;
 use App\Http\Controllers\Api\v1\TrustapController;
 use App\Http\Controllers\TrustapAuthController;
 use App\Http\Middleware\BrandRole;
@@ -37,11 +38,31 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                 });
                 Route::get('auth/redirect', [TrustapAuthController::class, 'redirectToTrustap'])->name('trustap.auth.redirect');
             });
+            /*=============================================
+            =            Campaign Trustap                 =
+            =============================================*/
+            Route::controller(CampaignTrustapController::class)->prefix('campaign')->group(function(){
+                Route::post('bidder-claims-payout/{campaignEntityTrustapTransaction}', 'bidderClaimsPayout');
+                Route::middleware(BrandRole::class)->group(function(){
+                    Route::get('fetch-transaction-list', 'getAssignedBidderList');
+                    Route::post('create_transaction/{bid}', 'createTransaction');
+                });
+                Route::middleware(InfluencerRole::class)->group(function(){
+                    Route::post('bidder-accept-deposit/{campaignEntityTrustapTransaction}', 'bidderAcceptDeposit');
+                });
+            });
+
+
+
         });
     });
     Route::get('payment/callback/{key}', [TrustapController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('auth/callback/{key}', [TrustapAuthController::class, 'handleProviderCallback'])->name('trustap.auth.callback');
-/*     Route::controller(TrustapAuthController::class)->group(function(){
+    /*=============================================
+    =            Campaign Trustap                 =
+    =============================================*/
+    Route::get('payment/callback/campaign/{key}', [CampaignTrustapController::class, 'paymentCallback'])->name('payment.callback');
+    /*     Route::controller(TrustapAuthController::class)->group(function(){
         Route::get('auth/redirect', 'redirectToTrustap');
         // Route::get('auth/callback', 'handleProviderCallback');
     }); */

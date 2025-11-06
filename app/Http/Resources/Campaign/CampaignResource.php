@@ -27,6 +27,7 @@ class CampaignResource extends JsonResource
             "brand" => new UserResource($this->whenLoaded('brand')),
             "tags" => $this->whenLoaded('tags', fn() => $this->tags->map(fn($item) => ['id' => $item->id, 'name' => $item->name])),
             'image' => $this->whenLoaded('media', fn() => $this->getFirstMediaUrl(Constants::MEDIA_CAMPAIGN)),
+            'is_assigned' => (bool) $this->bids_count
         ];
     }
 }

@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('brand_categories', function (Blueprint $table) {
-            $table->integer('id')->autoIncrement()->primary();
-            $table->string('name');
-            $table->string('slug');
+        Schema::table('bids', function (Blueprint $table) {
+            $table->boolean('is_selected')->default(false)->after('id');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('brand_categories');
+        Schema::table('bids', function (Blueprint $table) {
+            $table->dropColumn('selected');
+        });
     }
 };

@@ -67,7 +67,6 @@ class TrustapController extends Controller
         } catch (TransactionFailedException $e) {
             return $this->apiError($e->getMessage());
         } catch (\Exception $e) {
-            dd($e);
             Log::error('Error creating transaction: '.$e->getMessage());
             return $this->apiError('An error occurred while creating the transaction.');
         }

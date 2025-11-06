@@ -22,6 +22,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
+                'brand_category_id' => null
             ],
             [
                 'first_name' => 'brand',
@@ -30,6 +31,7 @@ class UserSeeder extends Seeder
                 'email' => 'brand@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
+                'brand_category_id' => 1
             ],
             [
                 'first_name' => 'influencer',
@@ -38,6 +40,7 @@ class UserSeeder extends Seeder
                 'email' => 'influencer@gmail.com',
                 'password' => bcrypt('testing123'),
                 'email_verified_at' => now(),
+                'brand_category_id' => null
             ]
         ];
 

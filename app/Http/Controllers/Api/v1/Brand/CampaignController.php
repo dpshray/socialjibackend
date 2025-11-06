@@ -16,6 +16,7 @@ use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Middleware\BrandInfluencerRole;
 use App\Http\Middleware\BrandRole;
 use App\Http\Resources\Bid\BidResource;
+use App\Models\Bid;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -68,8 +69,10 @@ class CampaignController extends Controller implements HasMiddleware
         $campaign = null;
         DB::transaction(function () use($request, $user, &$campaign){
             // dd($campaign_tag);
+            $currency_id = DB::table('currencies')->select('id')->where('code', 'USD')->first()->id;
+            $data = array_merge($request->only(["title", "description", "categories", "eligibility", "requirement", "price"]), ['currency_id' => $currency_id]);
             $campaign = $user->brandCampaigns()
-                ->create($request->only(["title", "description", "categories", "eligibility", "requirement", "price"]));
+                ->create($data);
             // ->tags()
             // ->createMany($campaign_tag);
             $campaign_tag = $request->collect('tag_id')->map(fn($item) => ['tag_id' => $item, 'campaign_id' => $campaign->id])->all();
@@ -152,6 +155,18 @@ class CampaignController extends Controller implements HasMiddleware
         $pagination = $campaign->bids()->with(['bidder.media'])->paginate($per_page);
         $data = $this->setupPagination($pagination, fn($item) => BidResource::collection($item))->data;
         return $this->apiSuccess("bidders lists of campaign title : {$campaign->title}", $data);
+    }
+
+    function toggleBidAssignment(Bid $bid){      
+        if ($bid->campaign->brand_id != Auth::id()) {
+            throw new ForbiddenItemAccessException();
+        }
+        $msg = "Bid has been assigned.";
+        if ($bid->is_selected) {
+            $msg = "Bid has been unassigned.";
+        }
+        $bid->update(['is_selected' => !$bid->is_selected]);
+        return $this->apiSuccess($msg);
     }
 
     private function isOwner(Campaign $campaign){

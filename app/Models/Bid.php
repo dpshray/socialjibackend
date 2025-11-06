@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Bid extends Model
 {
-    protected $fillable = ['detail','bid','bidder_id'];
+    protected $fillable = ['is_selected','detail','bid','bidder_id'];
 
     public function bidder(){
         return $this->belongsTo(User::class,'bidder_id');
+    }
+
+    function campaign() {
+        return $this->belongsTo(Campaign::class);
     }
 }
