@@ -173,9 +173,10 @@ class CampaignTrustapController extends Controller
 
     function getAssignedBidderList(Request $request) { #BRAND
         $per_page = $request->query('per_page');
-        $pagination = Bid::with(['trustapTransaction' => fn($qry) => $qry->where('status','<>', PaymentStatusEnum::TXN_INIT->value),'bidder','campaign'])
+                $pagination = Bid::with(['trustapTransaction' => fn($qry) => $qry->where('status','<>', PaymentStatusEnum::TXN_INIT->value),'bidder','campaign'])
             ->where('is_selected',true)
             ->whereRelation('campaign','brand_id',Auth::id())
+            ->orderBy('id','DESC')
             ->paginate($per_page);
         // $pagination = CampaignEntityTrustapTransaction::with(['bid.bidder', 'bid.campaign'])
         //     ->whereRelation('campaign','brand_id',Auth::id())
