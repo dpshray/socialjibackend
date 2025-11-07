@@ -43,6 +43,7 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
             =============================================*/
             Route::controller(CampaignTrustapController::class)->prefix('campaign')->group(function(){
                 Route::post('bidder-claims-payout/{campaignEntityTrustapTransaction}', 'bidderClaimsPayout');
+                
                 Route::middleware(BrandRole::class)->group(function(){
                     Route::get('fetch-transaction-list', 'getAssignedBidderList');
                     Route::post('create_transaction/{bid}', 'createTransaction');
@@ -50,6 +51,7 @@ Route::prefix('trustap')->name('trustap.')->group(function(){
                     Route::post('buyer-submit-complaint/{campaignEntityTrustapTransaction}', 'buyerSubmitComplaint');
                 });
                 Route::middleware(InfluencerRole::class)->group(function(){
+                    Route::get('get-brand-transaction-lists-no-trustap-user', 'fetchBrandTransactionNoTrustapUser')->withoutMiddleware(TrustapUser::class);
                     Route::post('bidder-accept-deposit/{campaignEntityTrustapTransaction}', 'bidderAcceptDeposit');
                     Route::get('item-delivery-confirmation/{campaignEntityTrustapTransaction}', 'confirmDelivery');
                     Route::get('get-bids-status', 'fetchBidStatus');

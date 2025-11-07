@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\PaymentStatusEnum;
 use App\Exceptions\ForbiddenItemAccessException;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Payment\BrandPaymentResource;
 use App\Http\Resources\Payment\Campaign\CampaignInfluencerPaymentCollection;
 use App\Http\Resources\Payment\Campaign\CampaignPaymentCollection;
 use App\Http\Resources\Payment\CampaignPaymentResource;
@@ -194,5 +195,15 @@ class CampaignTrustapController extends Controller
             ->paginate($per_page);
         $bids = $this->setupPagination($pagination, CampaignInfluencerPaymentCollection::class)->data;
         return $this->apiSuccess('List of all influencer bids', $bids);
+    }
+
+    function fetchBrandTransactionNoTrustapUser(Request $request) {
+        $per_page = $request->query('per_page');
+        $pagination = CampaignEntityTrustapTransaction::with(['bid.campaign.brand'])
+            ->whereRelation('bid', 'bidder_id', Auth::id())
+            ->where('status', '<>', PaymentStatusEnum::TXN_INIT->value)
+            ->paginate($per_page);
+        $bids = $this->setupPagination($pagination, CampaignInfluencerPaymentCollection::class)->data;
+        return $this->apiSuccess('List of all influencer bids(no trustap user)', $bids);
     }
 }
