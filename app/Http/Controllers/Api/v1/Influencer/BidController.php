@@ -35,6 +35,10 @@ class BidController extends Controller
     {
         $data = $request->validated();
         $data['bidder_id'] = Auth::id();
+        $bid_already_exists = $campaign->bids()->where('bidder_id',Auth::id())->exists();
+        if ($bid_already_exists) {
+            return $this->apiError('This campaign has already been bidded.');
+        }
         $campaign->bids()->create($data);
         return $this->apiSuccess('Bid added successfully');
     }
