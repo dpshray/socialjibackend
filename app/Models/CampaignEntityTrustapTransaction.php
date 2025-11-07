@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 
 class CampaignEntityTrustapTransaction extends Model
 {
+    const COMPLAIN_PERIOD_DEADLINE = 2; #IN DAYS
+    const COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY = 1; #IN DAY
+    
     protected $fillable = [
         'campaign_id',
         'bidder_id',
@@ -42,5 +46,13 @@ class CampaignEntityTrustapTransaction extends Model
     public function campaign()
     {
         return $this->hasOneThrough(Campaign::class,Bid::class,'id','id','bid_id','campaign_id');
+    }
+    
+    public function getComplaintAllowedAttribute()
+    {
+        return $this->delivered_at && $this->complaintPeriodDeadline
+            && $this->status == PaymentStatusEnum::HANDOVERED->value
+            && $this->delivered_at->addHours(self::COMPLAINT_PERIOD_DAYS_AFTER_DELIVERY)->isPast()
+            && $this->complaintPeriodDeadline->gte(now());
     }
 }

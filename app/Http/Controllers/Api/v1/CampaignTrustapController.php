@@ -171,12 +171,16 @@ class CampaignTrustapController extends Controller
         }
     }
 
-    function getAssignedBidderList(Request $request) {
+    function getAssignedBidderList(Request $request) { #BRAND
         $per_page = $request->query('per_page');
-        $pagination = CampaignEntityTrustapTransaction::with(['bid.bidder', 'bid.campaign'])
+        $pagination = Bid::with(['trustapTransaction' => fn($qry) => $qry->where('status','<>', PaymentStatusEnum::TXN_INIT->value),'bidder','campaign'])
+            ->where('is_selected',true)
             ->whereRelation('campaign','brand_id',Auth::id())
-            ->where('status', '<>',PaymentStatusEnum::TXN_INIT->value)
             ->paginate($per_page);
+        // $pagination = CampaignEntityTrustapTransaction::with(['bid.bidder', 'bid.campaign'])
+        //     ->whereRelation('campaign','brand_id',Auth::id())
+        //     ->where('status', '<>',PaymentStatusEnum::TXN_INIT->value)
+        //     ->paginate($per_page);
         $campaign = $this->setupPagination($pagination, CampaignPaymentCollection::class)->data;
         return $this->apiSuccess('List of all influencer bids', $campaign);
     }

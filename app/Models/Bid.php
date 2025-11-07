@@ -15,4 +15,8 @@ class Bid extends Model
     function campaign() {
         return $this->belongsTo(Campaign::class);
     }
+
+    function trustapTransaction() {
+        return $this->hasOne(CampaignEntityTrustapTransaction::class);
+    }
 }

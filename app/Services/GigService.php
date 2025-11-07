@@ -6,6 +6,7 @@ use App\Models\Gig;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class GigService
 {
@@ -45,7 +46,7 @@ class GigService
                 'price' => $data[1],
                 'delivery_time' => Carbon::createFromFormat('Y-m-d', $data[2])->startOfDay()->toDateTimeString(),
                 'description' => $data[3],
-                'currency_id' => $data[4],
+                'currency_id' => DB::table('currencies')->where('code', 'USD')->first()->id,
                 'requirement' => $data[5],
             ]);
         $gig->gig_pricing()->sync($pricingData->toArray());
