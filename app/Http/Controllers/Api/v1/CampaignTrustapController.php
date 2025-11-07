@@ -199,10 +199,7 @@ class CampaignTrustapController extends Controller
 
     function fetchBrandTransactionNoTrustapUser(Request $request) {
         $per_page = $request->query('per_page');
-        $pagination = CampaignEntityTrustapTransaction::with(['bid.campaign.brand'])
-            ->whereRelation('bid', 'bidder_id', Auth::id())
-            ->where('status', '<>', PaymentStatusEnum::TXN_INIT->value)
-            ->paginate($per_page);
+        $pagination = Bid::where('bidder_id',Auth::id())->paginate($per_page);
         $bids = $this->setupPagination($pagination, CampaignInfluencerPaymentCollection::class)->data;
         return $this->apiSuccess('List of all influencer bids(no trustap user)', $bids);
     }

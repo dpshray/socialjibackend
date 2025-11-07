@@ -15,16 +15,16 @@ class CampaignInfluencerPaymentResource extends JsonResource
     public function toArray(Request $request): array
     {
         // return parent::toArray($request);
-        $bid = $this->bid;
+        $bid = $this;
         $campaign = $bid->campaign;
         $brand = $campaign->brand;
         return [
-            'payment_id' => (int) $this->id,
+            'payment_id' => null,
             'bid_id' => (int)$bid->id,
-            'price' => (float) $this->price,
+            'price' => (float) $this->bid,
             'campaign_name' => $campaign->title,
             'campaign_brand_name' => $brand->first_name.' '.$brand->last_name,
-            'bidded_at' => $this->bid->created_at->format('Y/m/d'),
+            'bidded_at' => $this->created_at->format('Y/m/d'),
             'status' => $this->status
         ];
     }
