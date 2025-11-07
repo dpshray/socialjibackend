@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\V1\CampaignTrustapController;
+use App\Http\Controllers\Api\v1\CampaignTrustapController;
 use App\Http\Controllers\Api\v1\TrustapController;
 use App\Http\Controllers\TrustapAuthController;
 use App\Http\Middleware\BrandRole;
