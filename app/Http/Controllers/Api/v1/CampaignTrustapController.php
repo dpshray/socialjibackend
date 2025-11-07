@@ -192,6 +192,7 @@ class CampaignTrustapController extends Controller
         $pagination = CampaignEntityTrustapTransaction::with(['bid.campaign.brand'])
             ->whereRelation('bid', 'bidder_id', Auth::id())
             ->where('status', '<>', PaymentStatusEnum::TXN_INIT->value)
+            ->orderBy('id','DESC')
             ->paginate($per_page);
         $bids = $this->setupPagination($pagination, CampaignInfluencerPaymentCollection::class)->data;
         return $this->apiSuccess('List of all influencer bids', $bids);

@@ -19,11 +19,13 @@ class CampaignInfluencerPaymentResource extends JsonResource
         $campaign = $bid->campaign;
         $brand = $campaign->brand;
         return [
+            'payment_id' => $this->id,
             'bid_id' => (int)$bid->id,
-            'price' => (float) $this->bid,
+            'price' => $this->bid->bid,
             'campaign_name' => $campaign->title,
             'campaign_brand_name' => $brand->first_name.' '.$brand->last_name,
             'bidded_at' => $this->created_at->format('Y/m/d'),
+            'status' => $this->status
         ];
     }
 }
